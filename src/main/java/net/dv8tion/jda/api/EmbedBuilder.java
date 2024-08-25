@@ -18,6 +18,7 @@ package net.dv8tion.jda.api;
 import net.dv8tion.jda.api.entities.EmbedType;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.utils.Color;
 import net.dv8tion.jda.api.utils.data.DataArray;
 import net.dv8tion.jda.api.utils.data.DataObject;
 import net.dv8tion.jda.internal.entities.EntityBuilder;
@@ -26,7 +27,6 @@ import net.dv8tion.jda.internal.utils.Helpers;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.awt.*;
 import java.time.OffsetDateTime;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
@@ -519,7 +519,7 @@ public class EmbedBuilder
      *
      * @return the builder after the color has been set
      *
-     * @see    #setColor(java.awt.Color)
+     * @see    #setColor(net.dv8tion.jda.api.utils.Color)
      */
     @Nonnull
     public EmbedBuilder setColor(int color)

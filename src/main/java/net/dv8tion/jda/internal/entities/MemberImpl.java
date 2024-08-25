@@ -25,6 +25,7 @@ import net.dv8tion.jda.api.entities.channel.attribute.IPermissionContainer;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import net.dv8tion.jda.api.entities.channel.unions.DefaultGuildChannelUnion;
 import net.dv8tion.jda.api.entities.emoji.RichCustomEmoji;
+import net.dv8tion.jda.api.utils.Color;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import net.dv8tion.jda.api.utils.cache.CacheView;
 import net.dv8tion.jda.internal.JDAImpl;
@@ -37,9 +38,7 @@ import net.dv8tion.jda.internal.utils.PermissionUtil;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.awt.*;
 import java.time.OffsetDateTime;
-import java.util.List;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
@@ -218,7 +217,7 @@ public class MemberImpl implements Member, MemberMixin<MemberImpl>
     public Color getColor()
     {
         final int raw = getColorRaw();
-        return raw != Role.DEFAULT_COLOR_RAW ? new Color(raw) : null;
+        return raw != Role.DEFAULT_COLOR_RAW ? Color.of(raw) : null;
     }
 
     @Override

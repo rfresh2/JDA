@@ -26,6 +26,7 @@ import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import net.dv8tion.jda.api.exceptions.DetachedEntityException;
 import net.dv8tion.jda.api.managers.RoleManager;
 import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
+import net.dv8tion.jda.api.utils.Color;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import net.dv8tion.jda.api.utils.data.DataObject;
 import net.dv8tion.jda.internal.JDAImpl;
@@ -36,7 +37,6 @@ import net.dv8tion.jda.internal.utils.PermissionUtil;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.awt.*;
 import java.util.EnumSet;
 
 public class DetachedRoleImpl implements Role, RoleMixin<DetachedRoleImpl>
@@ -143,7 +143,7 @@ public class DetachedRoleImpl implements Role, RoleMixin<DetachedRoleImpl>
     @Override
     public Color getColor()
     {
-        return color != Role.DEFAULT_COLOR_RAW ? new Color(color) : null;
+        return color != Role.DEFAULT_COLOR_RAW ? Color.of(color) : null;
     }
 
     @Override

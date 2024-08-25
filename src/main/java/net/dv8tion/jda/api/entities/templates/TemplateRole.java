@@ -18,10 +18,10 @@ package net.dv8tion.jda.api.entities.templates;
 
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.ISnowflake;
+import net.dv8tion.jda.api.utils.Color;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.awt.*;
 import java.time.OffsetDateTime;
 import java.util.EnumSet;
 
@@ -94,7 +94,7 @@ public class TemplateRole implements ISnowflake
     @Nullable
     public Color getColor()
     {
-        return this.color == net.dv8tion.jda.api.entities.Role.DEFAULT_COLOR_RAW ? null : new Color(this.color);
+        return this.color == net.dv8tion.jda.api.entities.Role.DEFAULT_COLOR_RAW ? null : Color.of(this.color);
     }
 
     /**

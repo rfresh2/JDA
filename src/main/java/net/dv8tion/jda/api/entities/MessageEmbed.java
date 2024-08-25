@@ -17,6 +17,7 @@ package net.dv8tion.jda.api.entities;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.utils.AttachmentProxy;
+import net.dv8tion.jda.api.utils.Color;
 import net.dv8tion.jda.api.utils.FileProxy;
 import net.dv8tion.jda.api.utils.ImageProxy;
 import net.dv8tion.jda.api.utils.data.DataArray;
@@ -27,7 +28,6 @@ import org.jetbrains.annotations.Unmodifiable;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.awt.*;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
@@ -104,8 +104,8 @@ public class MessageEmbed implements SerializableData
 
     /**
      * The maximum amount of total embed fields the embed can hold
-     * 
-     * @see net.dv8tion.jda.api.EmbedBuilder#addField(String, String, boolean) 
+     *
+     * @see net.dv8tion.jda.api.EmbedBuilder#addField(String, String, boolean)
      */
     public static final int MAX_FIELD_AMOUNT = 25;
 
@@ -302,7 +302,7 @@ public class MessageEmbed implements SerializableData
     @Nullable
     public Color getColor()
     {
-        return color != Role.DEFAULT_COLOR_RAW ? new Color(color) : null;
+        return color != Role.DEFAULT_COLOR_RAW ? Color.of(color) : null;
     }
 
     /**

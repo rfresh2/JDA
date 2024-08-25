@@ -19,6 +19,7 @@ package net.dv8tion.jda.api.entities;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.channel.concrete.PrivateChannel;
 import net.dv8tion.jda.api.requests.restaction.CacheRestAction;
+import net.dv8tion.jda.api.utils.Color;
 import net.dv8tion.jda.api.utils.ImageProxy;
 import net.dv8tion.jda.api.utils.MiscUtil;
 import net.dv8tion.jda.internal.entities.UserSnowflakeImpl;
@@ -29,7 +30,6 @@ import org.jetbrains.annotations.Unmodifiable;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.awt.*;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
@@ -422,7 +422,7 @@ public interface User extends UserSnowflake
         @Nullable
         public Color getAccentColor()
         {
-            return accentColor == DEFAULT_ACCENT_COLOR_RAW ? null : new Color(accentColor);
+            return accentColor == DEFAULT_ACCENT_COLOR_RAW ? null : Color.of(accentColor);
         }
 
         /**

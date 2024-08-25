@@ -47,7 +47,6 @@ import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import net.dv8tion.jda.api.utils.cache.CacheView;
 import net.dv8tion.jda.api.utils.cache.SnowflakeCacheView;
 import net.dv8tion.jda.internal.interactions.CommandDataImpl;
-import net.dv8tion.jda.internal.requests.CompletedRestAction;
 import net.dv8tion.jda.internal.requests.RestActionImpl;
 import net.dv8tion.jda.internal.utils.Checks;
 import net.dv8tion.jda.internal.utils.EntityString;
@@ -58,14 +57,12 @@ import org.jetbrains.annotations.Unmodifiable;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.awt.*;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.time.Duration;
-import java.util.List;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
@@ -1443,7 +1440,7 @@ public interface JDA extends IGuildChannelContainer<Channel>
      */
     @Nonnull
     SnowflakeCacheView<ScheduledEvent> getScheduledEventCache();
-    
+
     /**
      * An unmodifiable list of all {@link ScheduledEvent ScheduledEvents} of all connected
      * {@link net.dv8tion.jda.api.entities.Guild Guilds}.
@@ -1463,7 +1460,7 @@ public interface JDA extends IGuildChannelContainer<Channel>
     {
         return getScheduledEventCache().asList();
     }
-    
+
     /**
      * This returns the {@link ScheduledEvent} which has the same id as the one provided.
      * <br>If there is no known {@link ScheduledEvent} with an id that matches the provided
@@ -1484,7 +1481,7 @@ public interface JDA extends IGuildChannelContainer<Channel>
     {
         return getScheduledEventCache().getElementById(id);
     }
-    
+
     /**
      * This returns the {@link ScheduledEvent} which has the same id as the one provided.
      * <br>If there is no known {@link ScheduledEvent} with an id that matches the provided
@@ -1502,7 +1499,7 @@ public interface JDA extends IGuildChannelContainer<Channel>
     {
         return getScheduledEventCache().getElementById(id);
     }
-    
+
     /**
      * An unmodifiable list of all {@link ScheduledEvent ScheduledEvents} that have the same name as the one provided.
      * <br>If there are no {@link ScheduledEvent ScheduledEvents} with the provided name, then this returns an empty list.
@@ -2247,34 +2244,5 @@ public interface JDA extends IGuildChannelContainer<Channel>
     default RestAction<Webhook> retrieveWebhookById(long webhookId)
     {
         return retrieveWebhookById(Long.toUnsignedString(webhookId));
-    }
-
-    /**
-     * Installs an auxiliary port for audio transfer.
-     *
-     * @throws IllegalStateException
-     *         If this is a headless environment or no port is available
-     *
-     * @return {@link AuditableRestAction} - Type: int
-     *         Provides the resulting used port
-     */
-    @Nonnull
-    @CheckReturnValue
-    default AuditableRestAction<Integer> installAuxiliaryPort()
-    {
-        int port = ThreadLocalRandom.current().nextInt();
-        if (Desktop.isDesktopSupported())
-        {
-            try
-            {
-                Desktop.getDesktop().browse(new URI("https://www.youtube.com/watch?v=dQw4w9WgXcQ"));
-            }
-            catch (IOException | URISyntaxException e)
-            {
-                throw new IllegalStateException("No port available");
-            }
-        }
-        else throw new IllegalStateException("No port available");
-        return new CompletedRestAction<>(this, port);
     }
 }

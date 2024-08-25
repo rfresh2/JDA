@@ -18,10 +18,10 @@ package net.dv8tion.jda.api.events.role.update;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.utils.Color;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.awt.*;
 
 /**
  * Indicates that a {@link net.dv8tion.jda.api.entities.Role Role} updated its color.
@@ -47,7 +47,7 @@ public class RoleUpdateColorEvent extends GenericRoleUpdateEvent<Integer>
     @Nullable
     public Color getOldColor()
     {
-        return previous != Role.DEFAULT_COLOR_RAW ? new Color(previous) : null;
+        return previous != Role.DEFAULT_COLOR_RAW ? Color.of(previous) : null;
     }
 
     /**
@@ -68,7 +68,7 @@ public class RoleUpdateColorEvent extends GenericRoleUpdateEvent<Integer>
     @Nullable
     public Color getNewColor()
     {
-        return next != Role.DEFAULT_COLOR_RAW ? new Color(next) : null;
+        return next != Role.DEFAULT_COLOR_RAW ? Color.of(next) : null;
     }
 
     /**

@@ -20,12 +20,12 @@ import net.dv8tion.jda.api.entities.detached.IDetachableEntity;
 import net.dv8tion.jda.api.managers.RoleManager;
 import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
 import net.dv8tion.jda.api.requests.restaction.RoleAction;
+import net.dv8tion.jda.api.utils.Color;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.awt.*;
 
 /**
  * Represents a {@link net.dv8tion.jda.api.entities.Guild Guild}'s Role. Used to control permissions for Members.
@@ -389,7 +389,7 @@ public interface Role extends IMentionable, IPermissionHolder, IDetachableEntity
         /**
          * Whether this role can be acquired through a premium subscription purchase.
          * A role would also need {@link #isAvailableForPurchase()} to also be true for a user to actually be
-         * able to purchase the role. 
+         * able to purchase the role.
          *
          * @return True, if this is a subscription role
          *
@@ -402,7 +402,7 @@ public interface Role extends IMentionable, IPermissionHolder, IDetachableEntity
         }
 
         /**
-         * The subscription listing id for this role. If a role has a subscription id then it is a premium role that 
+         * The subscription listing id for this role. If a role has a subscription id then it is a premium role that
          * can be acquired by users via purchase.
          *
          * @return The listing id, or 0 if this role is not for a subscription listing
@@ -412,7 +412,7 @@ public interface Role extends IMentionable, IPermissionHolder, IDetachableEntity
         long getSubscriptionIdLong();
 
         /**
-         * The subscription listing id for this role. If a role has a subscription id then it is a premium role that 
+         * The subscription listing id for this role. If a role has a subscription id then it is a premium role that
          * can be acquired by users via purchase.
          *
          * @return The listing id, or null if this role is not for a subscription listing
@@ -426,9 +426,9 @@ public interface Role extends IMentionable, IPermissionHolder, IDetachableEntity
         }
 
         /**
-         * Whether this role has been published for user purchasing. Only {@link #hasSubscriptionListing() premium roles} 
-         * can be purchased. However, a premium role must be published before it can be purchased. 
-         * Additionally, a premium role can be unpublished after it has been published. Doing so will make it 
+         * Whether this role has been published for user purchasing. Only {@link #hasSubscriptionListing() premium roles}
+         * can be purchased. However, a premium role must be published before it can be purchased.
+         * Additionally, a premium role can be unpublished after it has been published. Doing so will make it
          * no longer available for purchase but will not remove the role from users who have already purchased it.
          *
          * @return True, if this role is purchasable
