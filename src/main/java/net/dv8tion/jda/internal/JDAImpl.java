@@ -1239,6 +1239,15 @@ public class JDAImpl implements JDA
 
     @Nonnull
     @Override
+    public RestAction<Void> updateApplicationDescription(String description) {
+        Route.CompiledRoute route = Route.Applications.UPDATE_BOT_APPLICATION.compile();
+        DataObject object = DataObject.empty();
+        object.put("description", description);
+        return new RestActionImpl<>(this, route, object);
+    }
+
+    @Nonnull
+    @Override
     public EntitlementPaginationAction retrieveEntitlements()
     {
         return new EntitlementPaginationActionImpl(this);

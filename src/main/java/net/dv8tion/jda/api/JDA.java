@@ -1990,6 +1990,10 @@ public interface JDA extends IGuildChannelContainer<Channel>
     @CheckReturnValue
     RestAction<ApplicationInfo> retrieveApplicationInfo();
 
+    @Nonnull
+    @CheckReturnValue
+    RestAction<Void> updateApplicationDescription(String description);
+
     /**
      * A {@link net.dv8tion.jda.api.requests.restaction.pagination.PaginationAction PaginationAction} implementation
      * which allows you to {@link Iterable iterate} over {@link Entitlement}s that are applicable to the logged in application.
