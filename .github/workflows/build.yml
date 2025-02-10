@@ -1,0 +1,33 @@
+name: Build JDA
+
+on:
+    push:
+    pull_request:
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout Repository
+              uses: actions/checkout@v4
+
+            - name: Setup JDK
+              uses: actions/setup-java@v4
+              with:
+                  distribution: temurin
+                  java-version: 21
+
+            - name: Elevate Wrapper Perms
+              run: chmod +x ./gradlew
+
+            - name: Setup Gradle
+              uses: gradle/actions/setup-gradle@v4
+
+            - name: Build JDA
+              run: ./gradlew build test
+
+            - name: Upload Artifacts
+              uses: actions/upload-artifact@v4
+              with:
+                  name: Artifacts
+                  path: build/libs/*.jar

@@ -18,17 +18,13 @@
 //to build and upload everything:  "gradlew release"
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import io.github.gradlenexus.publishplugin.AbstractNexusStagingRepositoryTask
 import org.apache.tools.ant.filters.ReplaceTokens
-import java.time.Duration
 
 plugins {
-    signing
     `java-library`
     `maven-publish`
 
-    id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
-    id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("com.gradleup.shadow") version "8.3.6"
 }
 
 
@@ -40,7 +36,7 @@ plugins {
 
 
 val javaVersion = JavaVersion.current()
-val versionObj = Version(major = "5", minor = "3", revision = "0", classifier = null)
+val versionObj = Version(major = "5", minor = "3", revision = System.getenv("PUBLISH_VERSION") ?: "0", classifier = null)
 val isGithubAction = System.getProperty("GITHUB_ACTION") != null || System.getenv("GITHUB_ACTION") != null
 val isCI = System.getProperty("BUILD_NUMBER") != null // jenkins
         || System.getenv("BUILD_NUMBER") != null
@@ -66,33 +62,16 @@ val previousVersion: Version by lazy {
         versionObj
 }
 
-val signingKey: String? by project
-val signingKeyId: String? by project
-val ossrhUser: String? by project
-val ossrhPassword: String? by project
-val stagingProfile: String? by project
-
-val ossrhConfigured = ossrhUser != null && ossrhPassword != null
-val canSign = signingKey != null && signingKeyId != null
-val shouldPublish = canSign && ossrhConfigured && isGithubAction
-
-// Use normal version string for new releases and commitHash for other builds
-if (shouldPublish) {
-    project.version = "$versionObj"
-} else {
-    project.version = "${versionObj}_$commitHash"
-}
-
-project.group = "net.dv8tion"
-
+project.version = "$versionObj"
+project.group = "com.github.rfresh2"
 
 base {
     archivesName.set("JDA")
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }
 
 configure<SourceSetContainer> {
@@ -314,11 +293,6 @@ tasks.withType<JavaCompile> {
 
     val args = mutableListOf("-Xlint:deprecation", "-Xlint:unchecked")
 
-    if (javaVersion.isJava9Compatible) {
-        args.add("--release")
-        args.add("8")
-    }
-
     doFirst {
         options.compilerArgs = args
     }
@@ -393,6 +367,15 @@ val SoftwareComponentContainer.java
     get() = components.getByName<AdhocComponentWithVariants>("java")
 
 publishing {
+    repositories {
+        maven("https://maven.2b2t.vc/releases") {
+            name = "vc"
+            credentials {
+                username = System.getenv("MAVEN_USERNAME")
+                password = System.getenv("MAVEN_PASSWORD")
+            }
+        }
+    }
     publications {
         register<MavenPublication>("Release") {
             from(components["java"])
@@ -409,29 +392,6 @@ publishing {
     }
 }
 
-signing {
-    useInMemoryPgpKeys(signingKeyId, signingKey, "")
-    sign(publishing.publications.getByName("Release"))
-    isRequired = shouldPublish
-}
-
-nexusPublishing {
-    repositories.sonatype {
-        username.set(ossrhUser)
-        password.set(ossrhPassword)
-        stagingProfileId.set(stagingProfile)
-    }
-
-    connectTimeout.set(Duration.ofMinutes(1))
-    clientTimeout.set(Duration.ofMinutes(10))
-
-    transitionCheckOptions {
-        maxRetries.set(100)
-        delayBetween.set(Duration.ofSeconds(5))
-    }
-}
-
-
 ////////////////////////////////////
 //                                //
 //   Release Task Configuration   //
@@ -445,31 +405,6 @@ val rebuild by tasks.creating(Task::class) {
     dependsOn(build)
     dependsOn(tasks.clean)
     build.mustRunAfter(tasks.clean)
-}
-
-val publishingTasks = tasks.withType<PublishToMavenRepository> {
-    enabled = shouldPublish
-    mustRunAfter(rebuild)
-    dependsOn(rebuild)
-}
-
-tasks.withType<AbstractNexusStagingRepositoryTask> {
-    enabled = shouldPublish
-}
-
-val release by tasks.creating(Task::class) {
-    group = "publishing"
-    enabled = shouldPublish
-
-    dependsOn(publishingTasks)
-}
-
-afterEvaluate {
-    val closeAndReleaseStagingRepositories by tasks.getting
-    closeAndReleaseStagingRepositories.apply {
-        release.dependsOn(this)
-        mustRunAfter(publishingTasks)
-    }
 }
 
 
