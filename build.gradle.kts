@@ -91,6 +91,11 @@ configure<SourceSetContainer> {
 
 
 repositories {
+    maven("https://maven.2b2t.vc/releases") {
+        content {
+            includeGroup("com.github.rfresh2")
+        }
+    }
     mavenLocal()
     mavenCentral()
 }
@@ -128,6 +133,8 @@ dependencies {
 
     //Audio crypto libraries
     implementation(libs.tink)
+
+    implementation(libs.eventbus)
 
     //Sets the dependencies for the examples
     configurations["examplesImplementation"].withDependencies {

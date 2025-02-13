@@ -8,6 +8,7 @@ dependencyResolutionManagement {
             library("jackson-databind", "com.fasterxml.jackson.core", "jackson-databind").versionRef("jackson")
             bundle("jackson", listOf("jackson-core", "jackson-databind"))
 
+            library("eventbus", "com.github.rfresh2", "SimpleEventBus").version("1.3")
             library("logback-classic",       "ch.qos.logback",           "logback-classic"     ).version("1.5.6")
             library("opus",                  "club.minnced",             "opus-java"           ).version("1.1.1")
             library("findbugs",              "com.google.code.findbugs", "jsr305"              ).version("3.0.2")
