@@ -147,9 +147,9 @@ public class SortedSnowflakeCacheViewImpl<T extends ISnowflake & Comparable<? su
     {
         try (UnlockHook hook = readLock())
         {
-            T[] arr = elements.values(emptyArray);
-            Arrays.sort(arr, comparator);
-            return new ObjectArrayIterator<>(arr);
+            ArrayList<T> list = new ArrayList<>(elements.valueCollection());
+            list.sort(comparator);
+            return list.iterator();
         }
     }
 }

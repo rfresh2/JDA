@@ -52,7 +52,7 @@ public interface IPermissionContainerMixin<T extends IPermissionContainerMixin<T
     default List<PermissionOverride> getPermissionOverrides()
     {
         TLongObjectMap<PermissionOverride> overrides = getPermissionOverrideMap();
-        return Arrays.asList(overrides.values(new PermissionOverride[overrides.size()]));
+        return List.copyOf(overrides.valueCollection());
     }
 
     @Nonnull
