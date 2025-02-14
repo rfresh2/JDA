@@ -16,8 +16,8 @@
 
 package net.dv8tion.jda.api.interactions.commands;
 
-import gnu.trove.map.TLongObjectMap;
-import gnu.trove.map.hash.TLongObjectHashMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
@@ -48,10 +48,10 @@ public class OptionMapping
     private final DataObject data;
     private final OptionType type;
     private final String name;
-    private final TLongObjectMap<Object> resolved;
+    private final Long2ObjectMap<Object> resolved;
     private final Mentions mentions;
 
-    public OptionMapping(DataObject data, TLongObjectMap<Object> resolved, JDA jda, Guild guild)
+    public OptionMapping(DataObject data, Long2ObjectMap<Object> resolved, JDA jda, Guild guild)
     {
         this.data = data;
         this.type = OptionType.fromKey(data.getInt("type", -1));
@@ -60,7 +60,7 @@ public class OptionMapping
         if (type == OptionType.STRING)
             mentions = new InteractionMentions(getAsString(), resolved, (JDAImpl) jda, guild);
         else
-            mentions = new InteractionMentions("", new TLongObjectHashMap<>(0), (JDAImpl) jda, guild);
+            mentions = new InteractionMentions("", new Long2ObjectOpenHashMap<>(0), (JDAImpl) jda, guild);
     }
 
     /**
@@ -200,12 +200,12 @@ public class OptionMapping
 
     /**
      * The double value for this option.
-     * 
+     *
      * @throws IllegalStateException
      *         If this option {@link #getType() type} cannot be converted to a double
      * @throws NumberFormatException
      *         If this option is of type {@link OptionType#STRING STRING} and could not be parsed to a valid double value
-     * 
+     *
      * @return The double value
      */
     public double getAsDouble()

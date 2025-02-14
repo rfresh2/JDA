@@ -16,8 +16,8 @@
 
 package net.dv8tion.jda.internal.handle;
 
-import gnu.trove.map.TLongObjectMap;
-import gnu.trove.map.hash.TLongObjectHashMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.dv8tion.jda.api.entities.ThreadMember;
 import net.dv8tion.jda.api.events.thread.member.ThreadMemberJoinEvent;
 import net.dv8tion.jda.api.events.thread.member.ThreadMemberLeaveEvent;
@@ -115,7 +115,7 @@ public class ThreadMembersUpdateHandler extends SocketHandler
 
         //Store the removed threads into a map so that we can provide them in the events later.
         //We don't want to dispatch the events from inside the writeLock
-        TLongObjectMap<ThreadMember> removedThreadMembers = new TLongObjectHashMap<>();
+        Long2ObjectMap<ThreadMember> removedThreadMembers = new Long2ObjectOpenHashMap<>();
         try (UnlockHook lock = view.writeLock())
         {
             for (long threadMemberId : removedMemberIds)

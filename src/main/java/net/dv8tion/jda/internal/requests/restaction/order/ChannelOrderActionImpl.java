@@ -16,10 +16,10 @@
 
 package net.dv8tion.jda.internal.requests.restaction.order;
 
-import gnu.trove.map.TLongLongMap;
-import gnu.trove.map.hash.TLongLongHashMap;
-import gnu.trove.set.TLongSet;
-import gnu.trove.set.hash.TLongHashSet;
+import it.unimi.dsi.fastutil.longs.Long2LongMap;
+import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -45,8 +45,8 @@ public class ChannelOrderActionImpl
 {
     protected final Guild guild;
     protected final int bucket;
-    protected final TLongSet lockPermissions = new TLongHashSet();
-    protected final TLongLongMap parent = new TLongLongHashMap();
+    protected final LongSet lockPermissions = new LongOpenHashSet();
+    protected final Long2LongMap parent = new Long2LongOpenHashMap();
 
     /**
      * Creates a new ChannelOrderAction instance

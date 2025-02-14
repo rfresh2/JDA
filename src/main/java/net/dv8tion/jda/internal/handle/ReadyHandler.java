@@ -16,8 +16,8 @@
 
 package net.dv8tion.jda.internal.handle;
 
-import gnu.trove.map.TLongObjectMap;
-import gnu.trove.map.hash.TLongObjectHashMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.utils.data.DataArray;
 import net.dv8tion.jda.api.utils.data.DataObject;
@@ -40,7 +40,7 @@ public class ReadyHandler extends SocketHandler
 
         DataArray guilds = content.getArray("guilds");
         //Make sure we don't have any duplicates here!
-        TLongObjectMap<DataObject> distinctGuilds = new TLongObjectHashMap<>();
+        Long2ObjectMap<DataObject> distinctGuilds = new Long2ObjectOpenHashMap<>();
         for (int i = 0; i < guilds.length(); i++)
         {
             DataObject guild = guilds.getObject(i);
@@ -62,10 +62,9 @@ public class ReadyHandler extends SocketHandler
 
         if (getJDA().getGuildSetupController().setIncompleteCount(distinctGuilds.size()))
         {
-            distinctGuilds.forEachEntry((id, guild) ->
+            distinctGuilds.long2ObjectEntrySet().forEach(entry ->
             {
-                getJDA().getGuildSetupController().onReady(id, guild);
-                return true;
+                getJDA().getGuildSetupController().onReady(entry.getLongKey(), entry.getValue());
             });
         }
 

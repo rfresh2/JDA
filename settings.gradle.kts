@@ -15,7 +15,6 @@ dependencyResolutionManagement {
             library("websocket-client",      "com.neovisionaries",       "nv-websocket-client" ).version("2.14")
             library("okhttp",                "com.squareup.okhttp3",     "okhttp"              ).version("4.12.0")
             library("jna",                   "net.java.dev.jna",         "jna"                 ).version("5.14.0")
-            library("trove4j",               "net.sf.trove4j",           "core"                ).version("3.1.0")
             library("commons-collections",   "org.apache.commons",       "commons-collections4").version("4.4")
             library("commons-lang3",         "org.apache.commons",       "commons-lang3"       ).version("3.14.0")
             library("assertj",               "org.assertj",              "assertj-core"        ).version("3.25.3")

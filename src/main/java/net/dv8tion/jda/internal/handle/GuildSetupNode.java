@@ -16,12 +16,7 @@
 
 package net.dv8tion.jda.internal.handle;
 
-import gnu.trove.iterator.TLongIterator;
-import gnu.trove.iterator.TLongObjectIterator;
-import gnu.trove.map.TLongObjectMap;
-import gnu.trove.map.hash.TLongObjectHashMap;
-import gnu.trove.set.TLongSet;
-import gnu.trove.set.hash.TLongHashSet;
+import it.unimi.dsi.fastutil.longs.*;
 import net.dv8tion.jda.api.audio.hooks.ConnectionListener;
 import net.dv8tion.jda.api.audio.hooks.ConnectionStatus;
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
@@ -49,8 +44,8 @@ public class GuildSetupNode
     private final long id;
     private final GuildSetupController controller;
     private final List<DataObject> cachedEvents = new LinkedList<>();
-    private TLongObjectMap<DataObject> members;
-    private TLongSet removedMembers;
+    private Long2ObjectMap<DataObject> members;
+    private LongSet removedMembers;
     private DataObject partialGuild;
     private int expectedMemberCount = 1;
     boolean requestedChunk;
@@ -95,7 +90,7 @@ public class GuildSetupNode
 
     public int getCurrentMemberCount()
     {
-        TLongHashSet knownMembers = new TLongHashSet(members.keySet());
+        LongSet knownMembers = new LongOpenHashSet(members.keySet());
         knownMembers.removeAll(removedMembers);
         return knownMembers.size();
     }
@@ -340,10 +335,10 @@ public class GuildSetupNode
 
         if (members != null)
         {
-            for (TLongObjectIterator<DataObject> it = members.iterator(); it.hasNext();)
+            for (var it = Long2ObjectMaps.fastIterator(members); it.hasNext();)
             {
-                it.advance();
-                long userId = it.key();
+                var entry = it.next();
+                long userId = entry.getLongKey();
                 if (!getController().containsMember(userId, this)) // if no other setup node contains this userId we clear it here
                     eventCache.clear(EventCache.Type.USER, userId);
             }
@@ -354,8 +349,8 @@ public class GuildSetupNode
     {
         updateStatus(GuildSetupController.Status.BUILDING);
         JDAImpl api = getController().getJDA();
-        for (TLongIterator it = removedMembers.iterator(); it.hasNext(); )
-            members.remove(it.next());
+        for (var it = removedMembers.iterator(); it.hasNext(); )
+            members.remove(it.nextLong());
         removedMembers.clear();
         GuildImpl guild = api.getEntityBuilder().createGuild(id, partialGuild, members, expectedMemberCount);
         updateAudioManagerReference(guild);
@@ -386,8 +381,8 @@ public class GuildSetupNode
     private void ensureMembers()
     {
         expectedMemberCount = partialGuild.getInt("member_count");
-        members = new TLongObjectHashMap<>(expectedMemberCount);
-        removedMembers = new TLongHashSet();
+        members = new Long2ObjectOpenHashMap<>(expectedMemberCount);
+        removedMembers = new LongOpenHashSet();
         DataArray memberArray = partialGuild.getArray("members");
         if (!getController().getJDA().chunkGuild(id))
         {
@@ -422,7 +417,7 @@ public class GuildSetupNode
         AbstractCacheView<AudioManager> managerView = api.getAudioManagersView();
         try (UnlockHook hook = managerView.writeLock())
         {
-            TLongObjectMap<AudioManager> audioManagerMap = managerView.getMap();
+            Long2ObjectMap<AudioManager> audioManagerMap = managerView.getMap();
             AudioManagerImpl mng = (AudioManagerImpl) audioManagerMap.get(id);
             if (mng == null)
                 return;

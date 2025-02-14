@@ -22,8 +22,8 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import gnu.trove.map.TLongObjectMap;
-import gnu.trove.map.hash.TLongObjectHashMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.User;
@@ -40,8 +40,8 @@ public class WidgetImpl implements Widget
     private final long id;
     private final String name;
     private final String invite;
-    private final TLongObjectMap<VoiceChannelImpl> channels;
-    private final TLongObjectMap<Member> members;
+    private final Long2ObjectMap<VoiceChannelImpl> channels;
+    private final Long2ObjectMap<Member> members;
 
     /**
      * Constructs an unavailable Widget
@@ -52,8 +52,8 @@ public class WidgetImpl implements Widget
         id = guildId;
         name = null;
         invite = null;
-        channels = new TLongObjectHashMap<>();
-        members = new TLongObjectHashMap<>();
+        channels = new Long2ObjectOpenHashMap<>();
+        members = new Long2ObjectOpenHashMap<>();
     }
 
     /**
@@ -90,11 +90,11 @@ public class WidgetImpl implements Widget
             if (!memberJson.isNull("channel_id")) // voice state
             {
                 VoiceChannelImpl channel = channels.get(memberJson.getLong("channel_id"));
-                member.setVoiceState(new VoiceStateImpl(channel, 
-                        memberJson.getBoolean("mute"), 
-                        memberJson.getBoolean("deaf"), 
-                        memberJson.getBoolean("suppress"), 
-                        memberJson.getBoolean("self_mute"), 
+                member.setVoiceState(new VoiceStateImpl(channel,
+                        memberJson.getBoolean("mute"),
+                        memberJson.getBoolean("deaf"),
+                        memberJson.getBoolean("suppress"),
+                        memberJson.getBoolean("self_mute"),
                         memberJson.getBoolean("self_deaf"),
                         member,
                         this));
@@ -140,7 +140,7 @@ public class WidgetImpl implements Widget
     {
         checkAvailable();
 
-        return Collections.unmodifiableList(new ArrayList<>(channels.valueCollection()));
+        return List.copyOf(channels.values());
     }
 
     @Override
@@ -167,7 +167,7 @@ public class WidgetImpl implements Widget
     {
         checkAvailable();
 
-        return Collections.unmodifiableList(new ArrayList<>(members.valueCollection()));
+        return List.copyOf(members.values());
     }
 
     @Override
@@ -359,7 +359,7 @@ public class WidgetImpl implements Widget
         {
             return status;
         }
-        
+
         @Override
         @Nullable
         public Activity getActivity()
@@ -507,7 +507,7 @@ public class WidgetImpl implements Widget
             this.member = member;
             this.widget = widget;
         }
-        
+
         @Override
         @Nullable
         public VoiceChannel getChannel()

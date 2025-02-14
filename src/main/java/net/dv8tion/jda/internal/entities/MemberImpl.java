@@ -16,7 +16,7 @@
 
 package net.dv8tion.jda.internal.entities;
 
-import gnu.trove.map.TLongObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.Permission;
@@ -299,7 +299,7 @@ public class MemberImpl implements Member, MemberMixin<MemberImpl>
         if (hasLocalAdmin)
             return true;
 
-        TLongObjectMap<PermissionOverride> existingOverrides = ((IPermissionContainerMixin<?>) targetChannel).getPermissionOverrideMap();
+        Long2ObjectMap<PermissionOverride> existingOverrides = ((IPermissionContainerMixin<?>) targetChannel).getPermissionOverrideMap();
         for (PermissionOverride override : syncSource.getPermissionOverrides())
         {
             PermissionOverride existing = existingOverrides.get(override.getIdLong());

@@ -16,7 +16,7 @@
 
 package net.dv8tion.jda.internal.handle;
 
-import gnu.trove.map.TLongObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.emoji.RichCustomEmoji;
 import net.dv8tion.jda.api.events.emoji.EmojiAddedEvent;
@@ -63,8 +63,8 @@ public class GuildEmojisUpdateHandler extends SocketHandler
         SnowflakeCacheViewImpl<RichCustomEmoji> emojiView = guild.getEmojisView();
         try (UnlockHook hook = emojiView.writeLock())
         {
-            TLongObjectMap<RichCustomEmoji> emojiMap = emojiView.getMap();
-            oldEmojis = new ArrayList<>(emojiMap.valueCollection()); //snapshot of emoji cache
+            Long2ObjectMap<RichCustomEmoji> emojiMap = emojiView.getMap();
+            oldEmojis = new ArrayList<>(emojiMap.values()); //snapshot of emoji cache
             newEmojis = new ArrayList<>();
             for (int i = 0; i < array.length(); i++)
             {

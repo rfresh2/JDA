@@ -16,8 +16,8 @@
 
 package net.dv8tion.jda.internal.entities.channel.concrete;
 
-import gnu.trove.set.TLongSet;
-import gnu.trove.set.hash.TLongHashSet;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
@@ -63,7 +63,7 @@ public class ThreadChannelImpl extends AbstractGuildChannelImpl<ThreadChannelImp
     private final ChannelType type;
     private final CacheView.SimpleCacheView<ThreadMember> threadMembers = new CacheView.SimpleCacheView<>(ThreadMember.class, null);
 
-    private TLongSet appliedTags = new TLongHashSet(ForumChannel.MAX_POST_TAGS);
+    private LongSet appliedTags = new LongOpenHashSet(ForumChannel.MAX_POST_TAGS);
     private AutoArchiveDuration autoArchiveDuration;
     private IThreadContainerUnion parentChannel;
     private boolean locked;
@@ -445,7 +445,7 @@ public class ThreadChannelImpl extends AbstractGuildChannelImpl<ThreadChannelImp
 
     public ThreadChannelImpl setAppliedTags(LongStream tags)
     {
-        TLongSet set = new TLongHashSet(ForumChannel.MAX_POST_TAGS);
+        LongSet set = new LongOpenHashSet(ForumChannel.MAX_POST_TAGS);
         tags.forEach(set::add);
         this.appliedTags = set;
         return this;
@@ -463,7 +463,7 @@ public class ThreadChannelImpl extends AbstractGuildChannelImpl<ThreadChannelImp
         return archiveTimestamp;
     }
 
-    public TLongSet getAppliedTagsSet()
+    public LongSet getAppliedTagsSet()
     {
         return appliedTags;
     }

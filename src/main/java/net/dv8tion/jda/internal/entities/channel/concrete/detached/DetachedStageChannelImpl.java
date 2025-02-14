@@ -16,7 +16,7 @@
 
 package net.dv8tion.jda.internal.entities.channel.concrete.detached;
 
-import gnu.trove.map.TLongObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.StageInstance;
@@ -61,7 +61,7 @@ public class DetachedStageChannelImpl extends AbstractStandardGuildChannelImpl<D
     {
         return true;
     }
-    
+
     @Nonnull
     @Override
     public ChannelType getType()
@@ -156,7 +156,7 @@ public class DetachedStageChannelImpl extends AbstractStandardGuildChannelImpl<D
     }
 
     @Override
-    public TLongObjectMap<Member> getConnectedMembersMap()
+    public Long2ObjectMap<Member> getConnectedMembersMap()
     {
         throw detachedException();
     }

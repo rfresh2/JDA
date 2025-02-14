@@ -16,8 +16,9 @@
 
 package net.dv8tion.jda.api.utils;
 
-import gnu.trove.map.TIntObjectMap;
-import gnu.trove.map.hash.TIntObjectHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.dv8tion.jda.internal.utils.Checks;
 
 import javax.annotation.Nonnull;
@@ -74,11 +75,11 @@ public class MarkdownSanitizer
     private static final Pattern quote = Pattern.compile("> +.*", Pattern.DOTALL | Pattern.MULTILINE);
     private static final Pattern quoteBlock = Pattern.compile(">>>\\s+\\S.*", Pattern.DOTALL | Pattern.MULTILINE);
 
-    private static final TIntObjectMap<String> tokens;
+    private static final Int2ObjectMap<String> tokens;
 
     static
     {
-        tokens = new TIntObjectHashMap<>();
+        tokens = new Int2ObjectOpenHashMap<>();
         tokens.put(NORMAL, "");
         tokens.put(BOLD, "**");
         tokens.put(ITALICS_U, "_");

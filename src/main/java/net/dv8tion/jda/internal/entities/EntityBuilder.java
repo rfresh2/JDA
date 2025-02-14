@@ -16,8 +16,8 @@
 
 package net.dv8tion.jda.internal.entities;
 
-import gnu.trove.map.TLongObjectMap;
-import gnu.trove.map.hash.TLongObjectHashMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.audit.ActionType;
@@ -182,7 +182,7 @@ public class EntityBuilder extends AbstractEntityBuilder
         SnowflakeCacheViewImpl<RichCustomEmoji> emojiView = guildObj.getEmojisView();
         try (UnlockHook hook = emojiView.writeLock())
         {
-            TLongObjectMap<RichCustomEmoji> emojiMap = emojiView.getMap();
+            Long2ObjectMap<RichCustomEmoji> emojiMap = emojiView.getMap();
             for (int i = 0; i < array.length(); i++)
             {
                 DataObject object = array.getObject(i);
@@ -227,7 +227,7 @@ public class EntityBuilder extends AbstractEntityBuilder
         SnowflakeCacheViewImpl<GuildSticker> stickerView = guildObj.getStickersView();
         try (UnlockHook hook = stickerView.writeLock())
         {
-            TLongObjectMap<GuildSticker> stickerMap = stickerView.getMap();
+            Long2ObjectMap<GuildSticker> stickerMap = stickerView.getMap();
             for (int i = 0; i < array.length(); i++)
             {
                 DataObject object = array.getObject(i);
@@ -250,7 +250,7 @@ public class EntityBuilder extends AbstractEntityBuilder
         }
     }
 
-    public GuildImpl createGuild(long guildId, DataObject guildJson, TLongObjectMap<DataObject> members, int memberCount)
+    public GuildImpl createGuild(long guildId, DataObject guildJson, Long2ObjectMap<DataObject> members, int memberCount)
     {
         final GuildImpl guildObj = new GuildImpl(getJDA(), guildId);
         final String name = guildJson.getString("name", "");
@@ -323,7 +323,7 @@ public class EntityBuilder extends AbstractEntityBuilder
         SnowflakeCacheViewImpl<Role> roleView = guildObj.getRolesView();
         try (UnlockHook hook = roleView.writeLock())
         {
-            TLongObjectMap<Role> map = roleView.getMap();
+            Long2ObjectMap<Role> map = roleView.getMap();
             for (int i = 0; i < roleArray.length(); i++)
             {
                 DataObject obj = roleArray.getObject(i);
@@ -340,14 +340,14 @@ public class EntityBuilder extends AbstractEntityBuilder
             createGuildChannel(guildObj, channelJson);
         }
 
-        TLongObjectMap<DataObject> voiceStates = Helpers.convertToMap((o) -> o.getUnsignedLong("user_id", 0L), voiceStateArray);
-        TLongObjectMap<DataObject> presences = presencesArray.map(o1 -> Helpers.convertToMap(o2 -> o2.getObject("user").getUnsignedLong("id"), o1)).orElseGet(TLongObjectHashMap::new);
+        Long2ObjectMap<DataObject> voiceStates = Helpers.convertToMap((o) -> o.getUnsignedLong("user_id", 0L), voiceStateArray);
+        Long2ObjectMap<DataObject> presences = presencesArray.map(o1 -> Helpers.convertToMap(o2 -> o2.getObject("user").getUnsignedLong("id"), o1)).orElseGet(Long2ObjectOpenHashMap::new);
         try (UnlockHook h1 = guildObj.getMembersView().writeLock();
              UnlockHook h2 = getJDA().getUsersView().writeLock())
         {
             //Add members to cache when subscriptions are disabled when they appear here
             // this is done because we can still keep track of members in voice channels
-            for (DataObject memberJson : members.valueCollection())
+            for (DataObject memberJson : members.values())
             {
                 long userId = memberJson.getObject("user").getUnsignedLong("id");
                 DataObject voiceState = voiceStates.get(userId);
@@ -1814,7 +1814,7 @@ public class EntityBuilder extends AbstractEntityBuilder
         boolean isFinalized = resultsData.getBoolean("is_finalized");
 
         DataArray resultVotes = resultsData.getArray("answer_counts");
-        TLongObjectMap<DataObject> voteMapping = new TLongObjectHashMap<>();
+        Long2ObjectMap<DataObject> voteMapping = new Long2ObjectOpenHashMap<>();
         resultVotes.stream(DataArray::getObject)
                 .forEach(votes -> voteMapping.put(votes.getLong("id"), votes));
 

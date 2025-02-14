@@ -16,7 +16,7 @@
 
 package net.dv8tion.jda.internal.requests;
 
-import gnu.trove.map.TLongObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.GuildVoiceState;
@@ -44,7 +44,7 @@ class WebSocketSendingThread implements Runnable
     private final ReentrantLock queueLock;
     private final Queue<DataObject> chunkQueue;
     private final Queue<DataObject> ratelimitQueue;
-    private final TLongObjectMap<ConnectionRequest> queuedAudioConnections;
+    private final Long2ObjectMap<ConnectionRequest> queuedAudioConnections;
     private final ScheduledExecutorService executor;
     private Future<?> handle;
 

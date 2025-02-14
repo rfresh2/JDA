@@ -16,7 +16,7 @@
 
 package net.dv8tion.jda.internal.entities.channel.concrete;
 
-import gnu.trove.map.TLongObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -50,7 +50,7 @@ public class StageChannelImpl extends AbstractStandardGuildChannelImpl<StageChan
         StageChannel,
         StageChannelMixin<StageChannelImpl>
 {
-    private final TLongObjectMap<Member> connectedMembers = MiscUtil.newLongMap();
+    private final Long2ObjectMap<Member> connectedMembers = MiscUtil.newLongMap();
 
     private StageInstance instance;
     private String region;
@@ -77,7 +77,7 @@ public class StageChannelImpl extends AbstractStandardGuildChannelImpl<StageChan
     {
         return (GuildImpl) super.getGuild();
     }
-    
+
     @Nonnull
     @Override
     public ChannelType getType()
@@ -115,7 +115,7 @@ public class StageChannelImpl extends AbstractStandardGuildChannelImpl<StageChan
     @Override
     public List<Member> getMembers()
     {
-        return Collections.unmodifiableList(new ArrayList<>(connectedMembers.valueCollection()));
+        return List.copyOf(connectedMembers.values());
     }
 
     @Nonnull
@@ -200,7 +200,7 @@ public class StageChannelImpl extends AbstractStandardGuildChannelImpl<StageChan
     }
 
     @Override
-    public TLongObjectMap<Member> getConnectedMembersMap()
+    public Long2ObjectMap<Member> getConnectedMembersMap()
     {
         return connectedMembers;
     }

@@ -93,7 +93,7 @@ configure<SourceSetContainer> {
 repositories {
     maven("https://maven.2b2t.vc/releases") {
         content {
-            includeGroup("com.github.rfresh2")
+            includeGroupByRegex("com.github.rfresh2.*")
         }
     }
     mavenLocal()
@@ -128,8 +128,15 @@ dependencies {
     /* Internal dependencies */
 
     //General Utility
-    implementation(libs.trove4j)
     implementation(libs.bundles.jackson)
+    val fastutilVersion = "8.5.15"
+    implementation("com.github.rfresh2.fastutil.sets:long-sets:$fastutilVersion")
+    implementation("com.github.rfresh2.fastutil.sets:int-sets:$fastutilVersion")
+    implementation("com.github.rfresh2.fastutil.maps:long-object-maps:$fastutilVersion")
+    implementation("com.github.rfresh2.fastutil.maps:int-object-maps:$fastutilVersion")
+    implementation("com.github.rfresh2.fastutil.maps:int-long-maps:$fastutilVersion")
+    implementation("com.github.rfresh2.fastutil.maps:long-long-maps:$fastutilVersion")
+    implementation("com.github.rfresh2.fastutil.maps:object-int-maps:$fastutilVersion")
 
     //Audio crypto libraries
     implementation(libs.tink)

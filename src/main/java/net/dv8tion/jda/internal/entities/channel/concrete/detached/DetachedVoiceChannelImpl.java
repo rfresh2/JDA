@@ -16,7 +16,7 @@
 
 package net.dv8tion.jda.internal.entities.channel.concrete.detached;
 
-import gnu.trove.map.TLongObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
@@ -132,7 +132,7 @@ public class DetachedVoiceChannelImpl extends AbstractStandardGuildChannelImpl<D
     }
 
     @Override
-    public TLongObjectMap<Member> getConnectedMembersMap()
+    public Long2ObjectMap<Member> getConnectedMembersMap()
     {
         throw detachedException();
     }

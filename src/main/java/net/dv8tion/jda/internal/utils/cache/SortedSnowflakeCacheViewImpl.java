@@ -72,7 +72,7 @@ public class SortedSnowflakeCacheViewImpl<T extends ISnowflake & Comparable<? su
             if (list != null)
                 return list;
             list = new ArrayList<>(elements.size());
-            elements.forEachValue(list::add);
+            list.addAll(elements.values());
             list.sort(comparator);
             return cache(list);
         }
@@ -90,7 +90,7 @@ public class SortedSnowflakeCacheViewImpl<T extends ISnowflake & Comparable<? su
             if (set != null)
                 return set;
             set = new TreeSet<>(comparator);
-            elements.forEachValue(set::add);
+            set.addAll(elements.values());
             return cache(set);
         }
     }
@@ -147,7 +147,7 @@ public class SortedSnowflakeCacheViewImpl<T extends ISnowflake & Comparable<? su
     {
         try (UnlockHook hook = readLock())
         {
-            ArrayList<T> list = new ArrayList<>(elements.valueCollection());
+            ArrayList<T> list = new ArrayList<>(elements.values());
             list.sort(comparator);
             return list.iterator();
         }

@@ -16,8 +16,8 @@
 
 package net.dv8tion.jda.internal.requests.restaction;
 
-import gnu.trove.map.TLongObjectMap;
-import gnu.trove.map.hash.TLongObjectHashMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.Region;
 import net.dv8tion.jda.api.entities.Guild;
@@ -61,7 +61,7 @@ import java.util.function.BooleanSupplier;
 
 public class ChannelActionImpl<T extends GuildChannel> extends AuditableRestActionImpl<T> implements ChannelAction<T>
 {
-    protected final TLongObjectMap<PermOverrideData> overrides = new TLongObjectHashMap<>();
+    protected final Long2ObjectMap<PermOverrideData> overrides = new Long2ObjectOpenHashMap<>();
     protected final Guild guild;
     protected final Class<T> clazz;
     protected final ChannelType type;
@@ -423,7 +423,7 @@ public class ChannelActionImpl<T extends GuildChannel> extends AuditableRestActi
         //All channel types
         object.put("name", name);
         object.put("type", type.getId());
-        object.put("permission_overwrites", DataArray.fromCollection(overrides.valueCollection()));
+        object.put("permission_overwrites", DataArray.fromCollection(overrides.values()));
         if (position != null)
             object.put("position", position);
         if (parent != null)

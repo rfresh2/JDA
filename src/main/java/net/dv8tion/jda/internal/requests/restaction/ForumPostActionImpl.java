@@ -16,8 +16,8 @@
 
 package net.dv8tion.jda.internal.requests.restaction;
 
-import gnu.trove.set.TLongSet;
-import gnu.trove.set.hash.TLongHashSet;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.channel.Channel;
@@ -48,7 +48,7 @@ public class ForumPostActionImpl extends RestActionImpl<ForumPost> implements Fo
 {
     private final MessageCreateBuilder builder;
     private final IPostContainer channel;
-    private final TLongSet appliedTags = new TLongHashSet();
+    private final LongSet appliedTags = new LongOpenHashSet();
     private String name;
     private ThreadChannel.AutoArchiveDuration autoArchiveDuration;
 

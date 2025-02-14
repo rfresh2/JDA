@@ -17,8 +17,8 @@
 package net.dv8tion.jda.internal.requests;
 
 import com.neovisionaries.ws.client.*;
-import gnu.trove.iterator.TLongObjectIterator;
-import gnu.trove.map.TLongObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMaps;
 import net.dv8tion.jda.api.GatewayEncoding;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDAInfo;
@@ -113,7 +113,7 @@ public class WebSocketClient extends WebSocketAdapter implements WebSocketListen
     protected long heartbeatStartTime;
     protected long identifyTime = 0;
 
-    protected final TLongObjectMap<ConnectionRequest> queuedAudioConnections = MiscUtil.newLongMap();
+    protected final Long2ObjectMap<ConnectionRequest> queuedAudioConnections = MiscUtil.newLongMap();
     protected final Queue<DataObject> chunkSyncQueue = new ConcurrentLinkedQueue<>();
     protected final Queue<DataObject> ratelimitQueue = new ConcurrentLinkedQueue<>();
 
@@ -817,15 +817,15 @@ public class WebSocketClient extends WebSocketAdapter implements WebSocketListen
         AbstractCacheView<AudioManager> managerView = api.getAudioManagersView();
         try (UnlockHook hook = managerView.writeLock())
         {
-            final TLongObjectMap<AudioManager> managerMap = managerView.getMap();
+            final Long2ObjectMap<AudioManager> managerMap = managerView.getMap();
             if (managerMap.size() > 0)
                 LOG.trace("Updating AudioManager references");
 
-            for (TLongObjectIterator<AudioManager> it = managerMap.iterator(); it.hasNext(); )
+            for (var it = Long2ObjectMaps.fastIterator(managerMap); it.hasNext(); )
             {
-                it.advance();
-                final long guildId = it.key();
-                final AudioManagerImpl mng = (AudioManagerImpl) it.value();
+                var entry = it.next();
+                final long guildId = entry.getLongKey();
+                final AudioManagerImpl mng = (AudioManagerImpl) entry.getValue();
 
                 GuildImpl guild = (GuildImpl) api.getGuildById(guildId);
                 if (guild == null)
@@ -1298,8 +1298,17 @@ public class WebSocketClient extends WebSocketAdapter implements WebSocketListen
 
         long now = System.currentTimeMillis();
         AtomicReference<ConnectionRequest> request = new AtomicReference<>();
-        queuedAudioConnections.retainEntries((guildId, audioRequest) -> // we use this because it locks the mutex
+        queuedAudioConnections.forEach((guildId, audioRequest) ->
         {
+            if (audioRequest.getNextAttemptEpoch() < now)
+            {
+                // This will take the first result
+                request.compareAndSet(null, audioRequest);
+            }
+        });
+        queuedAudioConnections.long2ObjectEntrySet().removeIf(entry -> {
+            long guildId = entry.getLongKey();
+            ConnectionRequest audioRequest = entry.getValue();
             if (audioRequest.getNextAttemptEpoch() < now)
             {
                 // Check if the guild is ready
@@ -1312,9 +1321,9 @@ public class WebSocketClient extends WebSocketAdapter implements WebSocketListen
                     {
                         // The guild is not tracked anymore -> we can't connect the audio channel
                         LOG.debug("Removing audio connection request because the guild has been removed. {}", audioRequest);
-                        return false;
+                        return true;
                     }
-                    return true;
+                    return false;
                 }
 
                 ConnectionListener listener = guild.getAudioManager().getConnectionListener();
@@ -1326,22 +1335,21 @@ public class WebSocketClient extends WebSocketAdapter implements WebSocketListen
                     {
                         if (listener != null)
                             listener.onStatusChange(ConnectionStatus.DISCONNECTED_CHANNEL_DELETED);
-                        return false;
+                        return true;
                     }
 
                     if (!guild.getSelfMember().hasPermission(channel, Permission.VOICE_CONNECT))
                     {
                         if (listener != null)
                             listener.onStatusChange(ConnectionStatus.DISCONNECTED_LOST_PERMISSION);
-                        return false;
+                        return true;
                     }
                 }
                 // This will take the first result
                 request.compareAndSet(null, audioRequest);
             }
-            return true;
+            return false;
         });
-
         return request.get();
     }
 

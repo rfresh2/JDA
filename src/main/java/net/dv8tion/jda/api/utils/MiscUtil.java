@@ -15,9 +15,9 @@
  */
 package net.dv8tion.jda.api.utils;
 
-import gnu.trove.impl.sync.TSynchronizedLongObjectMap;
-import gnu.trove.map.TLongObjectMap;
-import gnu.trove.map.hash.TLongObjectHashMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMaps;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.dv8tion.jda.annotations.UnknownNullability;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.internal.utils.Checks;
@@ -48,7 +48,7 @@ public class MiscUtil
      *        The guild id.
      * @param shards
      *        The amount of shards.
-     * 
+     *
      * @return The shard id for the guild.
      */
     public static int getShardForGuild(long guildId, int shards)
@@ -95,17 +95,17 @@ public class MiscUtil
     }
 
     /**
-     * Generates a new thread-safe {@link gnu.trove.map.TLongObjectMap TLongObjectMap}
+     * Generates a new thread-safe map
      *
      * @param  <T>
      *         The Object type
      *
-     * @return a new thread-safe {@link gnu.trove.map.TLongObjectMap TLongObjectMap}
+     * @return a new thread-safe map
      */
     @Nonnull
-    public static <T> TLongObjectMap<T> newLongMap()
+    public static <T> Long2ObjectMap<T> newLongMap()
     {
-        return new TSynchronizedLongObjectMap<>(new TLongObjectHashMap<T>(), new Object());
+        return Long2ObjectMaps.synchronize(new Long2ObjectOpenHashMap<>());
     }
 
     public static long parseLong(String input)

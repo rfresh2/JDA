@@ -16,11 +16,7 @@
 
 package net.dv8tion.jda.internal.handle;
 
-import gnu.trove.iterator.TLongObjectIterator;
-import gnu.trove.map.TLongObjectMap;
-import gnu.trove.map.hash.TLongObjectHashMap;
-import gnu.trove.set.TLongSet;
-import gnu.trove.set.hash.TLongHashSet;
+import it.unimi.dsi.fastutil.longs.*;
 import net.dv8tion.jda.api.events.guild.GuildTimeoutEvent;
 import net.dv8tion.jda.api.events.guild.UnavailableGuildLeaveEvent;
 import net.dv8tion.jda.api.utils.MiscUtil;
@@ -49,9 +45,9 @@ public class GuildSetupController
     private static final int timeoutThreshold = 60; // Half of 120 rate limit
 
     private final JDAImpl api;
-    private final TLongObjectMap<GuildSetupNode> setupNodes = new TLongObjectHashMap<>();
-    private final TLongSet chunkingGuilds = new TLongHashSet();
-    private final TLongSet unavailableGuilds = new TLongHashSet();
+    private final Long2ObjectMap<GuildSetupNode> setupNodes = new Long2ObjectOpenHashMap<>();
+    private final LongSet chunkingGuilds = new LongOpenHashSet();
+    private final LongSet unavailableGuilds = new LongOpenHashSet();
 
     // TODO: Rewrite this incompleteCount system to just rely on the state of each node
     private int incompleteCount = 0;
@@ -296,24 +292,21 @@ public class GuildSetupController
 
     public boolean containsMember(long userId, @Nullable GuildSetupNode excludedNode)
     {
-        for (TLongObjectIterator<GuildSetupNode> it = setupNodes.iterator(); it.hasNext();)
-        {
-            it.advance();
-            GuildSetupNode node = it.value();
+        for (var node: setupNodes.values()) {
             if (node != excludedNode && node.containsMember(userId))
                 return true;
         }
         return false;
     }
 
-    public TLongSet getUnavailableGuilds()
+    public LongSet getUnavailableGuilds()
     {
         return unavailableGuilds;
     }
 
     public Set<GuildSetupNode> getSetupNodes()
     {
-        return new HashSet<>(setupNodes.valueCollection());
+        return new HashSet<>(setupNodes.values());
     }
 
     public Set<GuildSetupNode> getSetupNodes(Status status)
@@ -362,10 +355,7 @@ public class GuildSetupController
 
     private void tryChunking()
     {
-        chunkingGuilds.forEach((id) -> {
-            sendChunkRequest(id);
-            return true;
-        });
+        chunkingGuilds.forEach(this::sendChunkRequest);
         chunkingGuilds.clear();
     }
 
@@ -389,12 +379,10 @@ public class GuildSetupController
         if (incompleteCount < 1)
             return;
         log.warn("Automatically marking {} guilds as unavailable due to timeout!", incompleteCount);
-        TLongObjectIterator<GuildSetupNode> iterator = setupNodes.iterator();
-        while (iterator.hasNext())
-        {
-            iterator.advance();
-            GuildSetupNode node = iterator.value();
-            iterator.remove();
+        for (var it = Long2ObjectMaps.fastIterator(setupNodes); it.hasNext(); ) {
+            Long2ObjectMap.Entry<GuildSetupNode> entry = it.next();
+            GuildSetupNode node = entry.getValue();
+            it.remove();
             unavailableGuilds.add(node.getIdLong());
             // Inform users that the guild timed out
             getJDA().handleEvent(new GuildTimeoutEvent(getJDA(), node.getIdLong()));

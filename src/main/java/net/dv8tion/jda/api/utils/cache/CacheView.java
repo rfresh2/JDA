@@ -442,7 +442,7 @@ public interface CacheView<T> extends Iterable<T>
 
     /**
      * Basic implementation of {@link net.dv8tion.jda.api.utils.cache.CacheView CacheView} interface.
-     * <br>Using {@link gnu.trove.map.TLongObjectMap TLongObjectMap} to cache entities!
+     * <br>Using a map to cache entities!
      *
      * @param <T>
      *        The type this should cache

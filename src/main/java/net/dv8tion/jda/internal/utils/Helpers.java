@@ -16,8 +16,8 @@
 
 package net.dv8tion.jda.internal.utils;
 
-import gnu.trove.map.TLongObjectMap;
-import gnu.trove.map.hash.TLongObjectHashMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.dv8tion.jda.api.utils.data.DataArray;
 import net.dv8tion.jda.api.utils.data.DataObject;
 
@@ -273,9 +273,9 @@ public final class Helpers
         return Collections.unmodifiableList(Arrays.asList(elements));
     }
 
-    public static TLongObjectMap<DataObject> convertToMap(ToLongFunction<DataObject> getId, DataArray array)
+    public static Long2ObjectMap<DataObject> convertToMap(ToLongFunction<DataObject> getId, DataArray array)
     {
-        TLongObjectMap<DataObject> map = new TLongObjectHashMap<>();
+        Long2ObjectMap<DataObject> map = new Long2ObjectOpenHashMap<>();
         for (int i = 0; i < array.length(); i++)
         {
             DataObject obj = array.getObject(i);

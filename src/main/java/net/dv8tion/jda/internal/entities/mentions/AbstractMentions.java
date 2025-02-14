@@ -16,8 +16,8 @@
 
 package net.dv8tion.jda.internal.entities.mentions;
 
-import gnu.trove.map.TLongObjectMap;
-import gnu.trove.map.hash.TLongObjectHashMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
@@ -239,12 +239,12 @@ public abstract class AbstractMentions implements Mentions
                 mentions.addAll(getChannels());
                 break;
             case USER:
-                TLongObjectMap<IMentionable> set = new TLongObjectHashMap<>();
+                Long2ObjectMap<IMentionable> set = new Long2ObjectOpenHashMap<>();
                 for (User u : getUsers())
                     set.put(u.getIdLong(), u);
                 for (Member m : getMembers())
                     set.put(m.getIdLong(), m);
-                mentions.addAll(set.valueCollection());
+                mentions.addAll(set.values());
                 break;
             case ROLE:
                 mentions.addAll(getRoles());

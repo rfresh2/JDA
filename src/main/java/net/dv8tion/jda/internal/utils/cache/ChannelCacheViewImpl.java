@@ -16,8 +16,8 @@
 
 package net.dv8tion.jda.internal.utils.cache;
 
-import gnu.trove.map.TLongObjectMap;
-import gnu.trove.map.hash.TLongObjectHashMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.dv8tion.jda.api.entities.channel.Channel;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.utils.ClosableIterator;
@@ -39,7 +39,7 @@ import java.util.stream.Stream;
 
 public class ChannelCacheViewImpl<T extends Channel> extends ReadWriteLockCache<T> implements ChannelCacheView<T>
 {
-    protected final EnumMap<ChannelType, TLongObjectMap<T>> caches = new EnumMap<>(ChannelType.class);
+    protected final EnumMap<ChannelType, Long2ObjectMap<T>> caches = new EnumMap<>(ChannelType.class);
 
     public ChannelCacheViewImpl(Class<T> type)
     {
@@ -48,7 +48,7 @@ public class ChannelCacheViewImpl<T extends Channel> extends ReadWriteLockCache<
             channelType = normalizeKey(channelType);
             Class<? extends Channel> clazz = channelType.getInterface();
             if (channelType != ChannelType.UNKNOWN && type.isAssignableFrom(clazz))
-                caches.put(channelType, new TLongObjectHashMap<>());
+                caches.put(channelType, new Long2ObjectOpenHashMap<>());
         }
     }
 
@@ -60,9 +60,9 @@ public class ChannelCacheViewImpl<T extends Channel> extends ReadWriteLockCache<
 
     @Nullable
     @SuppressWarnings("unchecked")
-    protected <C extends T> TLongObjectMap<C> getMap(@Nonnull ChannelType type)
+    protected <C extends T> Long2ObjectMap<C> getMap(@Nonnull ChannelType type)
     {
-        return (TLongObjectMap<C>) caches.get(normalizeKey(type));
+        return (Long2ObjectMap<C>) caches.get(normalizeKey(type));
     }
 
     @Nullable
@@ -103,7 +103,7 @@ public class ChannelCacheViewImpl<T extends Channel> extends ReadWriteLockCache<
     {
         try (UnlockHook hook = writeLock())
         {
-            caches.values().forEach(TLongObjectMap::clear);
+            caches.clear();
         }
     }
 
@@ -119,10 +119,7 @@ public class ChannelCacheViewImpl<T extends Channel> extends ReadWriteLockCache<
     {
         try (UnlockHook hook = readLock())
         {
-            for (TLongObjectMap<T> cache : caches.values())
-            {
-                cache.valueCollection().forEach(action);
-            }
+            caches.values().forEach(m -> m.values().forEach(action));
         }
     }
 
@@ -156,7 +153,7 @@ public class ChannelCacheViewImpl<T extends Channel> extends ReadWriteLockCache<
         {
             Iterator<? extends T> directIterator = caches.values()
                     .stream()
-                    .flatMap(map -> map.valueCollection().stream())
+                    .flatMap(map -> map.values().stream())
                     .iterator();
             return new LockIterator<>(directIterator, readLock);
         }
@@ -172,7 +169,7 @@ public class ChannelCacheViewImpl<T extends Channel> extends ReadWriteLockCache<
     {
         try (UnlockHook hook = readLock())
         {
-            return caches.values().stream().mapToLong(TLongObjectMap::size).sum();
+            return caches.values().stream().mapToLong(Long2ObjectMap::size).sum();
         }
     }
 
@@ -181,7 +178,7 @@ public class ChannelCacheViewImpl<T extends Channel> extends ReadWriteLockCache<
     {
         try (UnlockHook hook = readLock())
         {
-            return caches.values().stream().allMatch(TLongObjectMap::isEmpty);
+            return caches.values().stream().allMatch(Long2ObjectMap::isEmpty);
         }
     }
 
@@ -217,7 +214,7 @@ public class ChannelCacheViewImpl<T extends Channel> extends ReadWriteLockCache<
     {
         try (UnlockHook hook = readLock())
         {
-            for (TLongObjectMap<? extends T> cache : caches.values())
+            for (Long2ObjectMap<? extends T> cache : caches.values())
             {
                 T element = cache.get(id);
                 if (element != null)
@@ -232,7 +229,7 @@ public class ChannelCacheViewImpl<T extends Channel> extends ReadWriteLockCache<
         Checks.notNull(type, "ChannelType");
         try (UnlockHook hook = readLock())
         {
-            TLongObjectMap<T> map = getMap(type);
+            Long2ObjectMap<T> map = getMap(type);
             return map == null ? null : map.get(id);
         }
     }
@@ -247,7 +244,7 @@ public class ChannelCacheViewImpl<T extends Channel> extends ReadWriteLockCache<
     public class FilteredCacheView<C extends T> implements ChannelCacheView<C>
     {
         protected final Class<C> type;
-        protected final List<TLongObjectMap<C>> filteredMaps;
+        protected final List<Long2ObjectMap<C>> filteredMaps;
 
         @SuppressWarnings("unchecked")
         protected FilteredCacheView(Class<C> type)
@@ -258,13 +255,13 @@ public class ChannelCacheViewImpl<T extends Channel> extends ReadWriteLockCache<
             this.filteredMaps = caches.entrySet()
                 .stream()
                 .filter(entry -> entry.getKey() != null && type.isAssignableFrom(entry.getKey().getInterface()))
-                .map(entry -> (TLongObjectMap<C>) entry.getValue())
+                .map(entry -> (Long2ObjectMap<C>) entry.getValue())
                 .collect(Collectors.toList());
         }
 
         protected void removeIf(Predicate<? super C> filter)
         {
-            this.filteredMaps.forEach(map -> map.valueCollection().removeIf(filter));
+            this.filteredMaps.forEach(map -> map.values().removeIf(filter));
         }
 
 
@@ -298,7 +295,7 @@ public class ChannelCacheViewImpl<T extends Channel> extends ReadWriteLockCache<
             {
                 Iterator<? extends C> directIterator =filteredMaps
                             .stream()
-                            .flatMap(map -> map.valueCollection().stream())
+                            .flatMap(map -> map.values().stream())
                             .iterator();
                 return new LockIterator<>(directIterator, readLock);
             }
@@ -316,7 +313,7 @@ public class ChannelCacheViewImpl<T extends Channel> extends ReadWriteLockCache<
             {
                 return filteredMaps
                             .stream()
-                            .mapToLong(TLongObjectMap::size)
+                            .mapToLong(Long2ObjectMap::size)
                             .sum();
             }
         }
@@ -328,7 +325,7 @@ public class ChannelCacheViewImpl<T extends Channel> extends ReadWriteLockCache<
             {
                 return filteredMaps
                             .stream()
-                            .allMatch(TLongObjectMap::isEmpty);
+                            .allMatch(Long2ObjectMap::isEmpty);
             }
         }
 

@@ -15,9 +15,9 @@
  */
 package net.dv8tion.jda.internal.handle;
 
-import gnu.trove.iterator.TLongObjectIterator;
-import gnu.trove.map.TLongObjectMap;
-import gnu.trove.map.hash.TLongObjectHashMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMaps;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.dv8tion.jda.api.utils.data.DataObject;
 import net.dv8tion.jda.internal.utils.CacheConsumer;
 import net.dv8tion.jda.internal.utils.JDALogger;
@@ -33,7 +33,7 @@ public class EventCache
     public static final Logger LOG = JDALogger.getLog(EventCache.class);
     /** Sequence difference after which events will be removed from cache */
     public static final long TIMEOUT_AMOUNT = 100;
-    private final EnumMap<Type, TLongObjectMap<List<CacheNode>>> eventCache = new EnumMap<>(Type.class);
+    private final EnumMap<Type, Long2ObjectMap<List<CacheNode>>> eventCache = new EnumMap<>(Type.class);
 
     public EventCache() {}
 
@@ -46,12 +46,10 @@ public class EventCache
         {
             if (map.isEmpty())
                 return;
-            TLongObjectIterator<List<CacheNode>> iterator = map.iterator();
-            while (iterator.hasNext())
-            {
-                iterator.advance();
-                long triggerId = iterator.key();
-                List<CacheNode> cache = iterator.value();
+            for (var it = Long2ObjectMaps.fastIterator(map); it.hasNext(); ) {
+                Long2ObjectMap.Entry<List<CacheNode>> entry = it.next();
+                long triggerId = entry.getLongKey();
+                List<CacheNode> cache = entry.getValue();
                 //Remove when this node is more than 100 events ago
                 cache.removeIf(node ->
                 {
@@ -64,7 +62,7 @@ public class EventCache
                     return remove;
                 });
                 if (cache.isEmpty())
-                    iterator.remove();
+                    it.remove();
             }
         });
         int amount = count.get();
@@ -74,8 +72,8 @@ public class EventCache
 
     public synchronized void cache(Type type, long triggerId, long responseTotal, DataObject event, CacheConsumer handler)
     {
-        TLongObjectMap<List<CacheNode>> triggerCache =
-                eventCache.computeIfAbsent(type, k -> new TLongObjectHashMap<>());
+        Long2ObjectMap<List<CacheNode>> triggerCache =
+                eventCache.computeIfAbsent(type, k -> new Long2ObjectOpenHashMap<>());
 
         List<CacheNode> items = triggerCache.get(triggerId);
         if (items == null)
@@ -89,7 +87,7 @@ public class EventCache
 
     public synchronized void playbackCache(Type type, long triggerId)
     {
-        TLongObjectMap<List<CacheNode>> typeCache = this.eventCache.get(type);
+        Long2ObjectMap<List<CacheNode>> typeCache = this.eventCache.get(type);
         if (typeCache == null)
             return;
 
@@ -107,7 +105,7 @@ public class EventCache
     {
         return (int) eventCache.values().stream()
                 .mapToLong(typeMap ->
-                    typeMap.valueCollection().stream().mapToLong(List::size).sum())
+                    typeMap.values().stream().mapToLong(List::size).sum())
                 .sum();
     }
 
@@ -118,7 +116,7 @@ public class EventCache
 
     public synchronized void clear(Type type, long id)
     {
-        TLongObjectMap<List<CacheNode>> typeCache = this.eventCache.get(type);
+        Long2ObjectMap<List<CacheNode>> typeCache = this.eventCache.get(type);
         if (typeCache == null)
             return;
 

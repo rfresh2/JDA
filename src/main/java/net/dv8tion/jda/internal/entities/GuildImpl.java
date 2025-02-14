@@ -16,9 +16,9 @@
 
 package net.dv8tion.jda.internal.entities;
 
-import gnu.trove.map.TLongObjectMap;
-import gnu.trove.map.hash.TLongObjectHashMap;
-import gnu.trove.set.TLongSet;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongSet;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.Region;
 import net.dv8tion.jda.api.audio.hooks.ConnectionStatus;
@@ -180,7 +180,7 @@ public class GuildImpl implements Guild
         //cleaning up all users that we do not share a guild with anymore
         // Anything left in memberIds will be removed from the main userMap
         //Use a new HashSet so that we don't actually modify the Member map so it doesn't affect Guild#getMembers for the leave event.
-        TLongSet memberIds = getMembersView().keySet(); // copies keys
+        LongSet memberIds = getMembersView().keySet(); // copies keys
         getJDA().getGuildCache().stream()
                 .map(GuildImpl.class::cast)
                 .forEach(g -> memberIds.removeAll(g.getMembersView().keySet()));
@@ -191,10 +191,9 @@ public class GuildImpl implements Guild
             long selfId = getJDA().getSelfUser().getIdLong();
             memberIds.forEach(memberId -> {
                 if (memberId == selfId)
-                    return true; // don't remove selfUser from cache
+                    return; // don't remove selfUser from cache
                 userView.remove(memberId);
                 getJDA().getEventCache().clear(EventCache.Type.USER, memberId);
-                return true;
             });
         }
     }
@@ -1327,7 +1326,7 @@ public class GuildImpl implements Guild
             List<ThreadChannel> list = new ArrayList<>(threads.length());
             EntityBuilder builder = api.getEntityBuilder();
 
-            TLongObjectMap<DataObject> selfThreadMemberMap = new TLongObjectHashMap<>();
+            Long2ObjectMap<DataObject> selfThreadMemberMap = new Long2ObjectOpenHashMap<>();
             for (int i = 0; i < selfThreadMembers.length(); i++)
             {
                 DataObject selfThreadMember = selfThreadMembers.getObject(i);

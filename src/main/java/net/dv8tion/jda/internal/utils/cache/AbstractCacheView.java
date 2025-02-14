@@ -16,10 +16,10 @@
 
 package net.dv8tion.jda.internal.utils.cache;
 
-import gnu.trove.map.TLongObjectMap;
-import gnu.trove.map.hash.TLongObjectHashMap;
-import gnu.trove.set.TLongSet;
-import gnu.trove.set.hash.TLongHashSet;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
 import net.dv8tion.jda.api.utils.LockIterator;
 import net.dv8tion.jda.api.utils.MiscUtil;
 import net.dv8tion.jda.api.utils.cache.CacheView;
@@ -38,7 +38,7 @@ import java.util.stream.StreamSupport;
 
 public abstract class AbstractCacheView<T> extends ReadWriteLockCache<T> implements CacheView<T>
 {
-    protected final TLongObjectMap<T> elements = new TLongObjectHashMap<>();
+    protected final Long2ObjectMap<T> elements = new Long2ObjectOpenHashMap<>();
     protected final Function<T, String> nameMapper;
     protected final Class<T> type;
 
@@ -57,7 +57,7 @@ public abstract class AbstractCacheView<T> extends ReadWriteLockCache<T> impleme
         }
     }
 
-    public TLongObjectMap<T> getMap()
+    public Long2ObjectMap<T> getMap()
     {
         if (!lock.writeLock().isHeldByCurrentThread())
             throw new IllegalStateException("Cannot access map directly without holding write lock!");
@@ -80,11 +80,11 @@ public abstract class AbstractCacheView<T> extends ReadWriteLockCache<T> impleme
         }
     }
 
-    public TLongSet keySet()
+    public LongSet keySet()
     {
         try (UnlockHook hook = readLock())
         {
-            return new TLongHashSet(elements.keySet());
+            return new LongOpenHashSet(elements.keySet());
         }
     }
 
@@ -94,7 +94,7 @@ public abstract class AbstractCacheView<T> extends ReadWriteLockCache<T> impleme
         Objects.requireNonNull(action);
         try (UnlockHook hook = readLock())
         {
-            for (T elem : elements.valueCollection())
+            for (T elem : elements.values())
             {
                 action.accept(elem);
             }
@@ -109,7 +109,7 @@ public abstract class AbstractCacheView<T> extends ReadWriteLockCache<T> impleme
         MiscUtil.tryLock(readLock);
         try
         {
-            Iterator<T> directIterator = elements.valueCollection().iterator();
+            Iterator<T> directIterator = elements.values().iterator();
             return new LockIterator<>(directIterator, readLock);
         }
         catch (Throwable t)
@@ -130,8 +130,7 @@ public abstract class AbstractCacheView<T> extends ReadWriteLockCache<T> impleme
             List<T> list = getCachedList();
             if (list != null)
                 return list;
-            list = new ArrayList<>(elements.size());
-            elements.forEachValue(list::add);
+            list = new ArrayList<>(elements.values());
             return cache(list);
         }
     }
@@ -147,8 +146,7 @@ public abstract class AbstractCacheView<T> extends ReadWriteLockCache<T> impleme
             Set<T> set = getCachedSet();
             if (set != null)
                 return set;
-            set = new HashSet<>(elements.size());
-            elements.forEachValue(set::add);
+            set = new HashSet<>(elements.values());
             return cache(set);
         }
     }
@@ -215,7 +213,7 @@ public abstract class AbstractCacheView<T> extends ReadWriteLockCache<T> impleme
     {
         try (UnlockHook hook = readLock())
         {
-            return List.copyOf(elements.valueCollection()).iterator();
+            return List.copyOf(elements.values()).iterator();
         }
     }
 

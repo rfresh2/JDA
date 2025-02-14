@@ -16,7 +16,7 @@
 
 package net.dv8tion.jda.internal.entities.channel.concrete;
 
-import gnu.trove.map.TLongObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
@@ -43,7 +43,7 @@ public class VoiceChannelImpl extends AbstractStandardGuildChannelImpl<VoiceChan
         VoiceChannel,
         VoiceChannelMixin<VoiceChannelImpl>
 {
-    private final TLongObjectMap<Member> connectedMembers = MiscUtil.newLongMap();
+    private final Long2ObjectMap<Member> connectedMembers = MiscUtil.newLongMap();
 
     private String region;
     private String status = "";
@@ -119,7 +119,7 @@ public class VoiceChannelImpl extends AbstractStandardGuildChannelImpl<VoiceChan
     @Override
     public List<Member> getMembers()
     {
-        return Collections.unmodifiableList(new ArrayList<>(connectedMembers.valueCollection()));
+        return List.copyOf(connectedMembers.values());
     }
 
     @Nonnull
@@ -153,7 +153,7 @@ public class VoiceChannelImpl extends AbstractStandardGuildChannelImpl<VoiceChan
     }
 
     @Override
-    public TLongObjectMap<Member> getConnectedMembersMap()
+    public Long2ObjectMap<Member> getConnectedMembersMap()
     {
         return connectedMembers;
     }

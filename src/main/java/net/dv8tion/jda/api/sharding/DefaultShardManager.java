@@ -15,7 +15,7 @@
  */
 package net.dv8tion.jda.api.sharding;
 
-import gnu.trove.set.TIntSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
@@ -52,10 +52,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
@@ -327,11 +324,10 @@ public class DefaultShardManager implements ShardManager
     @Override
     public void restart()
     {
-        TIntSet map = this.shards.keySet();
-
-        Arrays.stream(map.toArray())
-              .sorted() // this ensures shards are started in natural order
-              .forEach(this::restart);
+        IntSet map = this.shards.keySet();
+        List.copyOf(map).stream()
+                .sorted() // this ensures shards are started in natural order
+                .forEach(this::restart);
     }
 
     @Override

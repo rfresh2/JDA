@@ -16,7 +16,7 @@
 
 package net.dv8tion.jda.internal.entities.channel.concrete;
 
-import gnu.trove.map.TLongObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.PermissionOverride;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
@@ -38,7 +38,7 @@ public class CategoryImpl extends AbstractGuildChannelImpl<CategoryImpl> impleme
         Category,
         CategoryMixin<CategoryImpl>
 {
-    private final TLongObjectMap<PermissionOverride> overrides = MiscUtil.newLongMap();
+    private final Long2ObjectMap<PermissionOverride> overrides = MiscUtil.newLongMap();
 
     private int position;
 
@@ -150,7 +150,7 @@ public class CategoryImpl extends AbstractGuildChannelImpl<CategoryImpl> impleme
     }
 
     @Override
-    public TLongObjectMap<PermissionOverride> getPermissionOverrideMap()
+    public Long2ObjectMap<PermissionOverride> getPermissionOverrideMap()
     {
         return overrides;
     }

@@ -16,8 +16,8 @@
 
 package net.dv8tion.jda.api.utils.cache;
 
-import gnu.trove.map.TObjectIntMap;
-import gnu.trove.map.hash.TObjectIntHashMap;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
@@ -60,7 +60,7 @@ public class LRUMemberCachePolicy implements MemberCachePolicy
     private final int maxMembers;
 
     // Low activity members (usage based, trades memory for cpu time)
-    private final TObjectIntMap<Member> counters;
+    private final Object2IntMap<Member> counters;
     private final ArrayDeque<MemberNode> queue;
 
     // High activity members (time based, trades cpu time for memory)
@@ -88,7 +88,7 @@ public class LRUMemberCachePolicy implements MemberCachePolicy
         Checks.positive(maxMembers, "Max members");
         Checks.notNull(subPolicy, "MemberCachePolicy");
         this.maxMembers = maxMembers;
-        this.counters = new TObjectIntHashMap<>(maxMembers);
+        this.counters = new Object2IntOpenHashMap<>(maxMembers);
         this.queue = new ArrayDeque<>(maxMembers);
         this.useActiveMemberCache = Math.max(10, this.maxMembers / 10);
         this.activeMemberCache = new LinkedHashMap<>();
@@ -145,7 +145,7 @@ public class LRUMemberCachePolicy implements MemberCachePolicy
     @Override
     public synchronized boolean cacheMember(@Nonnull Member member)
     {
-        int currentCount = this.counters.adjustOrPutValue(member, 1, 1);
+        int currentCount = this.counters.computeInt(member, (key, value) -> value == null ? 1 : value + 1);
 
         if (this.useActiveMemberCache > 0)
         {
@@ -164,7 +164,7 @@ public class LRUMemberCachePolicy implements MemberCachePolicy
                 // This step has O(n) time complexity because it needs to iterate the entire queue
                 // Worst-case: 10 x maxMembers operations
                 this.queue.removeIf((node) -> member.equals(node.member));
-                this.counters.remove(member);
+                this.counters.removeInt(member);
                 this.activeMemberCache.put(member, now());
                 return true;
             }
@@ -201,14 +201,14 @@ public class LRUMemberCachePolicy implements MemberCachePolicy
             }
             else
             {
-                if (this.counters.get(removed.member) <= 1)
+                if (this.counters.getInt(removed.member) <= 1)
                 {
-                    this.counters.remove(removed.member);
+                    this.counters.removeInt(removed.member);
                     unloadable = removed.member;
                 }
                 else
                 {
-                    this.counters.adjustValue(removed.member, -1);
+                    this.counters.computeIntIfPresent(removed.member, (key, value) -> value - 1);
                 }
             }
 
@@ -227,9 +227,9 @@ public class LRUMemberCachePolicy implements MemberCachePolicy
         while (!this.queue.isEmpty())
         {
             MemberNode head = this.queue.peek();
-            if (this.counters.get(head) > 1)
+            if (this.counters.getInt(head) > 1)
             {
-                this.counters.adjustValue(head.member, -1);
+                this.counters.computeIntIfPresent(head.member, (key, value) -> value - 1);
                 this.queue.poll();
             }
             else

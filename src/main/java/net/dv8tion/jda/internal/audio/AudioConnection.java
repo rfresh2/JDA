@@ -18,10 +18,10 @@ package net.dv8tion.jda.internal.audio;
 
 import com.neovisionaries.ws.client.WebSocket;
 import com.sun.jna.ptr.PointerByReference;
-import gnu.trove.map.TIntLongMap;
-import gnu.trove.map.TIntObjectMap;
-import gnu.trove.map.hash.TIntLongHashMap;
-import gnu.trove.map.hash.TIntObjectHashMap;
+import it.unimi.dsi.fastutil.ints.Int2LongMap;
+import it.unimi.dsi.fastutil.ints.Int2LongOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.dv8tion.jda.api.audio.*;
 import net.dv8tion.jda.api.audio.factory.IAudioSendFactory;
 import net.dv8tion.jda.api.audio.factory.IAudioSendSystem;
@@ -65,8 +65,8 @@ public class AudioConnection
 
     protected volatile DatagramSocket udpSocket;
 
-    private final TIntLongMap ssrcMap = new TIntLongHashMap();
-    private final TIntObjectMap<Decoder> opusDecoders = new TIntObjectHashMap<>();
+    private final Int2LongMap ssrcMap = new Int2LongOpenHashMap();
+    private final Int2ObjectMap<Decoder> opusDecoders = new Int2ObjectOpenHashMap<>();
     private final HashMap<User, Queue<AudioData>> combinedQueue = new HashMap<>();
     private final String threadIdentifier;
     private final AudioWebSocket webSocket;
@@ -197,7 +197,7 @@ public class AudioConnection
             opusEncoder = null;
         }
 
-        opusDecoders.valueCollection().forEach(Decoder::close);
+        opusDecoders.values().forEach(Decoder::close);
         opusDecoders.clear();
 
         MiscUtil.locked(readyLock, readyCondvar::signalAll);
@@ -261,13 +261,13 @@ public class AudioConnection
     protected void removeUserSSRC(long userId)
     {
         final AtomicInteger ssrcRef = new AtomicInteger(0);
-        final boolean modified = ssrcMap.retainEntries((ssrc, id) ->
-        {
-            final boolean isEntry = id == userId;
-            if (isEntry)
-                ssrcRef.set(ssrc);
-            // if isEntry == true we don't want to retain it
-            return !isEntry;
+        final boolean modified = ssrcMap.int2LongEntrySet().removeIf(entry -> {
+           int ssrc = entry.getIntKey();
+           long id = entry.getLongValue();
+           final boolean isEntry = id == userId;
+           if (isEntry)
+               ssrcRef.set(ssrc);
+           return isEntry;
         });
         if (!modified)
             return;
@@ -341,7 +341,7 @@ public class AudioConnection
                 combinedAudioExecutor = null;
             }
 
-            opusDecoders.valueCollection().forEach(Decoder::close);
+            opusDecoders.values().forEach(Decoder::close);
             opusDecoders.clear();
         }
         else if (receiveHandler != null && !receiveHandler.canReceiveCombined() && combinedAudioExecutor != null)
@@ -385,7 +385,7 @@ public class AudioConnection
                             int ssrc = decryptedPacket.getSSRC();
                             final long userId = ssrcMap.get(ssrc);
                             Decoder decoder = opusDecoders.get(ssrc);
-                            if (userId == ssrcMap.getNoEntryValue())
+                            if (userId == ssrcMap.defaultReturnValue())
                             {
                                 ByteBuffer audio = decryptedPacket.getEncodedAudio();
 

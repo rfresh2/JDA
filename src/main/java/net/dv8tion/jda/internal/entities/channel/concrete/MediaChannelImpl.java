@@ -16,7 +16,7 @@
 
 package net.dv8tion.jda.internal.entities.channel.concrete;
 
-import gnu.trove.map.TLongObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.PermissionOverride;
@@ -47,7 +47,7 @@ public class MediaChannelImpl extends AbstractGuildChannelImpl<MediaChannelImpl>
         GuildChannelUnion,
         MediaChannelMixin<MediaChannelImpl>
 {
-    private final TLongObjectMap<PermissionOverride> overrides = MiscUtil.newLongMap();
+    private final Long2ObjectMap<PermissionOverride> overrides = MiscUtil.newLongMap();
     private final SortedSnowflakeCacheViewImpl<ForumTag> tagCache = new SortedSnowflakeCacheViewImpl<>(ForumTag.class, ForumTag::getName, Comparator.naturalOrder());
 
     private Emoji defaultReaction;
@@ -110,7 +110,7 @@ public class MediaChannelImpl extends AbstractGuildChannelImpl<MediaChannelImpl>
     }
 
     @Override
-    public TLongObjectMap<PermissionOverride> getPermissionOverrideMap()
+    public Long2ObjectMap<PermissionOverride> getPermissionOverrideMap()
     {
         return overrides;
     }

@@ -15,10 +15,10 @@
  */
 package net.dv8tion.jda.internal.utils.cache;
 
-import gnu.trove.map.TIntObjectMap;
-import gnu.trove.map.hash.TIntObjectHashMap;
-import gnu.trove.set.TIntSet;
-import gnu.trove.set.hash.TIntHashSet;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.utils.ClosableIterator;
 import net.dv8tion.jda.api.utils.LockIterator;
@@ -29,7 +29,6 @@ import net.dv8tion.jda.internal.utils.ChainedClosableIterator;
 import net.dv8tion.jda.internal.utils.Checks;
 import net.dv8tion.jda.internal.utils.Helpers;
 import net.dv8tion.jda.internal.utils.UnlockHook;
-import org.apache.commons.collections4.iterators.ObjectArrayIterator;
 
 import javax.annotation.Nonnull;
 import java.util.*;
@@ -42,16 +41,16 @@ import java.util.stream.StreamSupport;
 public class ShardCacheViewImpl extends ReadWriteLockCache<JDA> implements ShardCacheView
 {
     protected static final JDA[] EMPTY_ARRAY = new JDA[0];
-    protected final TIntObjectMap<JDA> elements;
+    protected final Int2ObjectMap<JDA> elements;
 
     public ShardCacheViewImpl()
     {
-        this.elements = new TIntObjectHashMap<>();
+        this.elements = new Int2ObjectOpenHashMap<>();
     }
 
     public ShardCacheViewImpl(int initialCapacity)
     {
-        this.elements = new TIntObjectHashMap<>(initialCapacity);
+        this.elements = new Int2ObjectOpenHashMap<>(initialCapacity);
     }
 
     public void clear()
@@ -70,18 +69,18 @@ public class ShardCacheViewImpl extends ReadWriteLockCache<JDA> implements Shard
         }
     }
 
-    public TIntObjectMap<JDA> getMap()
+    public Int2ObjectMap<JDA> getMap()
     {
         if (!lock.writeLock().isHeldByCurrentThread())
             throw new IllegalStateException("Cannot access map without holding write lock!");
         return elements;
     }
 
-    public TIntSet keySet()
+    public IntSet keySet()
     {
         try (UnlockHook hook = readLock())
         {
-            return new TIntHashSet(elements.keySet());
+            return new IntOpenHashSet(elements.keySet());
         }
     }
 
@@ -91,7 +90,7 @@ public class ShardCacheViewImpl extends ReadWriteLockCache<JDA> implements Shard
         Objects.requireNonNull(action);
         try (UnlockHook hook = readLock())
         {
-            for (JDA shard : elements.valueCollection())
+            for (JDA shard : elements.values())
             {
                 action.accept(shard);
             }
@@ -109,7 +108,7 @@ public class ShardCacheViewImpl extends ReadWriteLockCache<JDA> implements Shard
             List<JDA> list = getCachedList();
             if (list != null)
                 return list;
-            return cache(new ArrayList<>(elements.valueCollection()));
+            return cache(new ArrayList<>(elements.values()));
         }
     }
 
@@ -124,7 +123,7 @@ public class ShardCacheViewImpl extends ReadWriteLockCache<JDA> implements Shard
             Set<JDA> set = getCachedSet();
             if (set != null)
                 return set;
-            return cache(new HashSet<>(elements.valueCollection()));
+            return cache(new HashSet<>(elements.values()));
         }
     }
 
@@ -136,7 +135,7 @@ public class ShardCacheViewImpl extends ReadWriteLockCache<JDA> implements Shard
         MiscUtil.tryLock(readLock);
         try
         {
-            Iterator<JDA> directIterator = elements.valueCollection().iterator();
+            Iterator<JDA> directIterator = elements.values().iterator();
             return new LockIterator<>(directIterator, readLock);
         }
         catch (Throwable t)
@@ -169,7 +168,7 @@ public class ShardCacheViewImpl extends ReadWriteLockCache<JDA> implements Shard
         try (UnlockHook hook = readLock())
         {
             List<JDA> list = new LinkedList<>();
-            for (JDA elem : elements.valueCollection())
+            for (JDA elem : elements.values())
             {
                 String elementName = elem.getShardInfo().getShardString();
                 if (elementName != null)
@@ -220,8 +219,7 @@ public class ShardCacheViewImpl extends ReadWriteLockCache<JDA> implements Shard
     {
         try (UnlockHook hook = readLock())
         {
-            JDA[] arr = elements.values(EMPTY_ARRAY);
-            return new ObjectArrayIterator<>(arr);
+            return new ArrayList<>(elements.values()).iterator();
         }
     }
 

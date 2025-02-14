@@ -16,10 +16,10 @@
 
 package net.dv8tion.jda.internal.handle;
 
-import gnu.trove.map.TLongObjectMap;
-import gnu.trove.map.hash.TLongObjectHashMap;
-import gnu.trove.set.TLongSet;
-import gnu.trove.set.hash.TLongHashSet;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.Region;
 import net.dv8tion.jda.api.entities.Guild;
@@ -245,7 +245,7 @@ public class ChannelUpdateHandler extends SocketHandler
 
     private void applyPermissions(IPermissionContainerMixin<?> channel, DataArray permOverwrites)
     {
-        TLongObjectMap<PermissionOverride> currentOverrides = new TLongObjectHashMap<>(channel.getPermissionOverrideMap());
+        Long2ObjectMap<PermissionOverride> currentOverrides = new Long2ObjectOpenHashMap<>(channel.getPermissionOverrideMap());
         List<IPermissionHolder> changed = new ArrayList<>(currentOverrides.size());
         Guild guild = channel.getGuild();
         for (int i = 0; i < permOverwrites.length(); i++)
@@ -256,14 +256,13 @@ public class ChannelUpdateHandler extends SocketHandler
                 addPermissionHolder(changed, guild, id);
         }
 
-        currentOverrides.forEachValue(override -> {
+        currentOverrides.values().forEach(override -> {
             channel.getPermissionOverrideMap().remove(override.getIdLong());
             addPermissionHolder(changed, guild, override.getIdLong());
             api.handleEvent(
                 new PermissionOverrideDeleteEvent(
                     api, responseNumber,
                     channel, override));
-            return true;
         });
     }
 
@@ -381,8 +380,8 @@ public class ChannelUpdateHandler extends SocketHandler
 
         try (UnlockHook hook = view.writeLock())
         {
-            TLongObjectMap<ForumTag> cache = view.getMap();
-            TLongSet removedTags = new TLongHashSet(cache.keySet());
+            Long2ObjectMap<ForumTag> cache = view.getMap();
+            LongSet removedTags = new LongOpenHashSet(cache.keySet());
 
             for (int i = 0; i < tags.length(); i++)
             {
@@ -430,7 +429,6 @@ public class ChannelUpdateHandler extends SocketHandler
                 ForumTag tag = cache.remove(id);
                 if (tag != null)
                     api.handleEvent(new ForumTagRemoveEvent(api, responseNumber, channel, tag));
-                return true;
             });
         }
     }

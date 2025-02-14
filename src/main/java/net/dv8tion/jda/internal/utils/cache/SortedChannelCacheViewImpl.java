@@ -89,7 +89,7 @@ public class SortedChannelCacheViewImpl<T extends Channel & Comparable<? super T
     {
         try (UnlockHook hook = readLock())
         {
-            return caches.values().stream().flatMap(cache -> cache.valueCollection().stream()).collect(Collectors.toList()).stream();
+            return caches.values().stream().flatMap(cache -> cache.values().stream()).collect(Collectors.toList()).stream();
         }
     }
 

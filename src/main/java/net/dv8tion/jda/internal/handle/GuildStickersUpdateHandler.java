@@ -16,7 +16,7 @@
 
 package net.dv8tion.jda.internal.handle;
 
-import gnu.trove.map.TLongObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.sticker.GuildSticker;
 import net.dv8tion.jda.api.events.sticker.GuildStickerAddedEvent;
@@ -70,8 +70,8 @@ public class GuildStickersUpdateHandler extends SocketHandler
         EntityBuilder builder = api.getEntityBuilder();
         try (UnlockHook hook = stickersView.writeLock())
         {
-            TLongObjectMap<GuildSticker> stickersMap = stickersView.getMap();
-            oldStickers = new ArrayList<>(stickersMap.valueCollection()); //snapshot of sticker cache
+            Long2ObjectMap<GuildSticker> stickersMap = stickersView.getMap();
+            oldStickers = new ArrayList<>(stickersMap.values()); //snapshot of sticker cache
             newStickers = new ArrayList<>();
             for (int i = 0; i < array.length(); i++)
             {
