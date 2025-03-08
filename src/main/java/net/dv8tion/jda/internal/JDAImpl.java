@@ -515,7 +515,7 @@ public class JDAImpl implements JDA
                  || current.ordinal() < status.ordinal()) // If we missed the status (e.g. LOGGING_IN -> CONNECTED happened while waiting for lock)
             {
                 if (current == Status.SHUTDOWN)
-                    throw new IllegalStateException("Was shutdown trying to await status.\nReason: " + shutdownReason);
+                    throw new ShutdownException(shutdownReason, "Was shutdown trying to await status.\nReason: " + shutdownReason);
                 if (endCondition.contains(current))
                     return this;
 

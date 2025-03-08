@@ -358,7 +358,7 @@ public interface JDA extends IGuildChannelContainer<Channel>
      *         If this thread is interrupted while waiting
      * @throws IllegalArgumentException
      *         If the provided status is null or not an init status ({@link Status#isInit()})
-     * @throws IllegalStateException
+     * @throws net.dv8tion.jda.api.utils.ShutdownException
      *         If JDA is shutdown during this wait period
      *
      * @return The current JDA instance, for chaining convenience
