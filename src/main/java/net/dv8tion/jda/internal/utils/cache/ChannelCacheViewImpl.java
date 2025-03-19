@@ -103,7 +103,7 @@ public class ChannelCacheViewImpl<T extends Channel> extends ReadWriteLockCache<
     {
         try (UnlockHook hook = writeLock())
         {
-            caches.clear();
+            caches.values().forEach(Long2ObjectMap::clear);
         }
     }
 
