@@ -39,6 +39,8 @@ import net.dv8tion.jda.api.entities.channel.unions.DefaultGuildChannelUnion;
 import net.dv8tion.jda.api.entities.detached.IDetachableEntity;
 import net.dv8tion.jda.api.entities.emoji.CustomEmoji;
 import net.dv8tion.jda.api.entities.emoji.RichCustomEmoji;
+import net.dv8tion.jda.api.entities.guild.SecurityIncidentActions;
+import net.dv8tion.jda.api.entities.guild.SecurityIncidentDetections;
 import net.dv8tion.jda.api.entities.sticker.*;
 import net.dv8tion.jda.api.entities.templates.Template;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
@@ -1267,6 +1269,30 @@ public interface Guild extends IGuildChannelContainer<GuildChannel>, ISnowflake,
     Timeout getAfkTimeout();
 
     /**
+     * The current guild {@link SecurityIncidentActions security incident actions}.
+     * <br>Security incident actions are used to temporarily disable features for the purpose of moderation.
+     *
+     * @throws net.dv8tion.jda.api.exceptions.DetachedEntityException
+     *         If this entity is {@link #isDetached() detached}
+     *
+     * @return {@link SecurityIncidentActions} the current actions
+     */
+    @Nonnull
+    SecurityIncidentActions getSecurityIncidentActions();
+
+    /**
+     * The current security incident detections.
+     * <br>Discord may automatically detect spammers or raiders.
+     *
+     * @throws net.dv8tion.jda.api.exceptions.DetachedEntityException
+     *         If this entity is {@link #isDetached() detached}
+     *
+     * @return {@link SecurityIncidentDetections} the current detections
+     */
+    @Nonnull
+    SecurityIncidentDetections getSecurityIncidentDetections();
+
+    /**
      * Used to determine if the provided {@link UserSnowflake} is a member of this Guild.
      *
      * <p>This will only check cached members! If the cache is not loaded (see {@link #isLoaded()}), this may return false despite the user being a member.
@@ -1656,6 +1682,37 @@ public interface Guild extends IGuildChannelContainer<GuildChannel>, ISnowflake,
      */
     @Nonnull
     SortedSnowflakeCacheView<ScheduledEvent> getScheduledEventCache();
+
+    /**
+     * Retrieves all {@link ScheduledEvent ScheduledEvents} for this guild.
+     * <br>This list does not include user count data. Use {@link #retrieveScheduledEvents(boolean)} to get user count data
+     *
+     * @throws net.dv8tion.jda.api.exceptions.DetachedEntityException
+     *         If this entity is {@link #isDetached() detached}
+     *
+     * @return {@link RestAction} - Type: {@link List} of {@link ScheduledEvent}
+     */
+    @Nonnull
+    @CheckReturnValue
+    default RestAction<List<ScheduledEvent>> retrieveScheduledEvents()
+    {
+        return retrieveScheduledEvents(false);
+    }
+
+    /**
+     * Retrieves all {@link ScheduledEvent ScheduledEvents} for this guild.
+     *
+     * @param  includeUserCount
+     *         Whether to include user counts for the {@link ScheduledEvent ScheduledEvents}.
+     *
+     * @throws net.dv8tion.jda.api.exceptions.DetachedEntityException
+     *         If this entity is {@link #isDetached() detached}
+     *
+     * @return {@link RestAction} - Type: {@link List} of {@link ScheduledEvent}
+     */
+    @Nonnull
+    @CheckReturnValue
+    RestAction<List<ScheduledEvent>> retrieveScheduledEvents(boolean includeUserCount);
     
     /**
      * Gets a list of all {@link ScheduledEvent ScheduledEvents} in this Guild that have the same
@@ -4008,6 +4065,36 @@ public interface Guild extends IGuildChannelContainer<GuildChannel>, ISnowflake,
     @Nonnull
     @CheckReturnValue
     AuditableRestAction<Integer> prune(int days, boolean wait, @Nonnull Role... roles);
+
+    /**
+     * Update the current guild {@link SecurityIncidentActions security incident actions}.
+     * <br>Security incident actions are used to temporarily disable features for the purpose of moderation.
+     *
+     * <p>Possible {@link net.dv8tion.jda.api.requests.ErrorResponse ErrorResponses} caused by
+     * the returned {@link RestAction RestAction} include the following:
+     * <ul>
+     *     <li>{@link net.dv8tion.jda.api.requests.ErrorResponse#INVALID_FORM_BODY}
+     *     <br>If one of the provided timestamps is too far into the future</li>
+     * </ul>
+     *
+     * @param  incidents
+     *         The new security incidents
+     *
+     * @throws IllegalArgumentException
+     *         If null is provided
+     * @throws InsufficientPermissionException
+     *         If the account doesn't have {@link net.dv8tion.jda.api.Permission#MANAGE_SERVER MANAGE_SERVER} Permission.
+     * @throws net.dv8tion.jda.api.exceptions.DetachedEntityException
+     *         If this entity is {@link #isDetached() detached}
+     *
+     * @return {@link AuditableRestAction}
+     *
+     * @see    SecurityIncidentActions#enabled(OffsetDateTime, OffsetDateTime)
+     * @see    SecurityIncidentActions#disabled()
+     */
+    @Nonnull
+    @CheckReturnValue
+    AuditableRestAction<Void> modifySecurityIncidents(@Nonnull SecurityIncidentActions incidents);
 
     /**
      * Kicks the {@link UserSnowflake} from the {@link net.dv8tion.jda.api.entities.Guild Guild}.

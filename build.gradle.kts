@@ -24,7 +24,7 @@ plugins {
     `java-library`
     `maven-publish`
 
-    id("com.gradleup.shadow") version "8.3.6"
+    alias(libs.plugins.shadow)
 }
 
 
@@ -36,7 +36,7 @@ plugins {
 
 
 val javaVersion = JavaVersion.current()
-val versionObj = Version(major = "5", minor = "3", revision = System.getenv("PUBLISH_VERSION") ?: "0", classifier = null)
+val versionObj = Version(major = "5", minor = "4", revision = System.getenv("PUBLISH_VERSION") ?: "0", classifier = null)
 val isGithubAction = System.getProperty("GITHUB_ACTION") != null || System.getenv("GITHUB_ACTION") != null
 val isCI = System.getProperty("BUILD_NUMBER") != null // jenkins
         || System.getenv("BUILD_NUMBER") != null
@@ -150,7 +150,7 @@ dependencies {
         addAll(configurations["compileOnly"].allDependencies)
     }
 
-    testImplementation(libs.junit)
+    testImplementation(libs.bundles.junit)
     testImplementation(libs.reflections)
     testImplementation(libs.mockito)
     testImplementation(libs.assertj)
@@ -159,13 +159,19 @@ dependencies {
     testImplementation(libs.archunit)
 }
 
+fun isNonStable(version: String): Boolean {
+    val stableKeyword = listOf("RELEASE", "FINAL", "GA").any { version.uppercase().contains(it) }
+    val regex = "^[0-9,.v-]+(-r)?$".toRegex()
+    val isStable = stableKeyword || regex.matches(version)
+    return isStable.not()
+}
+
 
 ////////////////////////////////////
 //                                //
 //    Build Task Configuration    //
 //                                //
 ////////////////////////////////////
-
 
 val jar by tasks.getting(Jar::class) {
     archiveBaseName.set(project.name)
@@ -179,7 +185,7 @@ val shadowJar by tasks.getting(ShadowJar::class) {
     exclude("*.pom")
 }
 
-val sourcesForRelease by tasks.creating(Copy::class) {
+val sourcesForRelease by tasks.registering(Copy::class) {
     from("src/main/java") {
         include("**/JDAInfo.java")
         val tokens = mapOf(
@@ -200,16 +206,16 @@ val sourcesForRelease by tasks.creating(Copy::class) {
     includeEmptyDirs = false
 }
 
-val generateJavaSources by tasks.creating(SourceTask::class) {
+val generateJavaSources by tasks.registering(SourceTask::class) {
     val javaSources = sourceSets["main"].allJava.filter {
         it.name != "JDAInfo.java"
     }.asFileTree
 
-    source = javaSources + fileTree(sourcesForRelease.destinationDir)
+    source = javaSources + fileTree(sourcesForRelease.get().destinationDir)
     dependsOn(sourcesForRelease)
 }
 
-val noOpusJar by tasks.creating(ShadowJar::class) {
+val noOpusJar by tasks.registering(ShadowJar::class) {
     dependsOn(shadowJar)
     archiveClassifier.set(shadowJar.archiveClassifier.get() + "-no-opus")
 
@@ -223,7 +229,7 @@ val noOpusJar by tasks.creating(ShadowJar::class) {
     manifest.inheritFrom(jar.manifest)
 }
 
-val minimalJar by tasks.creating(ShadowJar::class) {
+val minimalJar by tasks.registering(ShadowJar::class) {
     dependsOn(shadowJar)
     minimize()
     archiveClassifier.set(shadowJar.archiveClassifier.get() + "-min")
@@ -241,12 +247,12 @@ val minimalJar by tasks.creating(ShadowJar::class) {
     manifest.inheritFrom(jar.manifest)
 }
 
-val sourcesJar by tasks.creating(Jar::class) {
+val sourcesJar by tasks.registering(Jar::class) {
     archiveClassifier.set("sources")
     from("src/main/java") {
         exclude("**/JDAInfo.java")
     }
-    from(sourcesForRelease.destinationDir)
+    from(sourcesForRelease.get().destinationDir)
 
     dependsOn(sourcesForRelease)
 }
@@ -283,7 +289,7 @@ val javadoc by tasks.getting(Javadoc::class) {
     }
 
     dependsOn(sourcesJar)
-    source = sourcesJar.source.asFileTree
+    source = sourcesJar.get().source.asFileTree
     exclude("MANIFEST.MF")
 
     //### excludes ###
@@ -295,7 +301,7 @@ val javadoc by tasks.getting(Javadoc::class) {
     exclude("com/iwebpp/crypto")
 }
 
-val javadocJar by tasks.creating(Jar::class) {
+val javadocJar by tasks.registering(Jar::class) {
     dependsOn(javadoc)
     archiveClassifier.set("javadoc")
     from(javadoc.destinationDir)
@@ -314,7 +320,7 @@ tasks.withType<JavaCompile> {
 
 val compileJava by tasks.getting(JavaCompile::class) {
     dependsOn(generateJavaSources)
-    source = generateJavaSources.source
+    source = generateJavaSources.get().source
 }
 
 val build by tasks.getting(Task::class) {
@@ -413,12 +419,23 @@ publishing {
 ////////////////////////////////////
 
 
-val rebuild by tasks.creating(Task::class) {
+val rebuild by tasks.registering(Task::class) {
     group = "build"
 
     dependsOn(build)
     dependsOn(tasks.clean)
     build.mustRunAfter(tasks.clean)
+}
+
+val publishingTasks = tasks.withType<PublishToMavenRepository> {
+    mustRunAfter(rebuild)
+    dependsOn(rebuild)
+}
+
+val release by tasks.registering(Task::class) {
+    group = "publishing"
+
+    dependsOn(publishingTasks)
 }
 
 
