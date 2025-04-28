@@ -16,9 +16,7 @@
 
 package net.dv8tion.jda.internal.entities.channel.mixin.middleman;
 
-import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.unions.AudioChannelUnion;
 import net.dv8tion.jda.api.exceptions.MissingAccessException;
 
@@ -26,7 +24,6 @@ public interface AudioChannelMixin<T extends AudioChannelMixin<T>>
         extends AudioChannelUnion, StandardGuildChannelMixin<T>
 {
     // ---- State Accessors ----
-    Long2ObjectMap<Member> getConnectedMembersMap();
 
     T setBitrate(int bitrate);
 

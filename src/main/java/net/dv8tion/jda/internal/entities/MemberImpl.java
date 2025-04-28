@@ -47,7 +47,6 @@ public class MemberImpl implements Member, MemberMixin<MemberImpl>
 {
     private final JDAImpl api;
     private final Set<Role> roles = ConcurrentHashMap.newKeySet();
-    private final GuildVoiceState voiceState;
 
     private GuildImpl guild;
     private User user;
@@ -63,8 +62,6 @@ public class MemberImpl implements Member, MemberMixin<MemberImpl>
         this.guild = guild;
         this.user = user;
         this.joinDate = 0;
-        boolean cacheState = api.isCacheFlagSet(CacheFlag.VOICE_STATE) || user.equals(api.getSelfUser());
-        this.voiceState = cacheState ? new GuildVoiceStateImpl(this) : null;
     }
 
     @Override
@@ -143,9 +140,9 @@ public class MemberImpl implements Member, MemberMixin<MemberImpl>
     }
 
     @Override
-    public GuildVoiceState getVoiceState()
+    public GuildVoiceStateImpl getVoiceState()
     {
-        return voiceState;
+       return guild.getVoiceState(this);
     }
 
     @Nonnull

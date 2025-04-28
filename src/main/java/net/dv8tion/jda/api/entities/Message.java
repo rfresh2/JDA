@@ -50,8 +50,8 @@ import net.dv8tion.jda.api.requests.restaction.ThreadChannelAction;
 import net.dv8tion.jda.api.requests.restaction.pagination.PollVotersPaginationAction;
 import net.dv8tion.jda.api.requests.restaction.pagination.ReactionPaginationAction;
 import net.dv8tion.jda.api.utils.AttachedFile;
-import net.dv8tion.jda.api.utils.AttachmentProxy;
 import net.dv8tion.jda.api.utils.FileUpload;
+import net.dv8tion.jda.api.utils.NamedAttachmentProxy;
 import net.dv8tion.jda.api.utils.data.DataObject;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import net.dv8tion.jda.api.utils.messages.MessageEditData;
@@ -208,7 +208,7 @@ public interface Message extends ISnowflake, Formattable
             "(?:https?://)?" +                     // Scheme
             "(?:\\w+\\.)?" +                       // Subdomain
             "discord(?:(?:app)?\\.com" +           // Discord domain
-            "/invite|\\.gg)/(?<code>[a-z0-9-]+)" + // Path
+            "/invite[/\\\\]|\\.gg/)(?<code>[a-z0-9-]+)" + // Path
             "(?:\\?\\S*)?(?:#\\S*)?",              // Useless query or URN appendix
             Pattern.CASE_INSENSITIVE);
 
@@ -1176,7 +1176,7 @@ public interface Message extends ISnowflake, Formattable
      *
      *     <li>{@link net.dv8tion.jda.api.requests.ErrorResponse#UNKNOWN_MESSAGE UNKNOWN_MESSAGE}
      *     <br>The provided {@code messageId} is unknown in this MessageChannel, either due to the id being invalid, or
-     *         the message it referred to has already been deleted. This might also be triggered for ephemeral messages.</li>
+     *         the message it referred to has already been deleted. This might also be triggered for ephemeral messages, if the interaction expired.</li>
      *
      *     <li>{@link net.dv8tion.jda.api.requests.ErrorResponse#UNKNOWN_CHANNEL UNKNOWN_CHANNEL}
      *     <br>The request was attempted after the channel was deleted.</li>
@@ -1221,7 +1221,7 @@ public interface Message extends ISnowflake, Formattable
      *
      *     <li>{@link net.dv8tion.jda.api.requests.ErrorResponse#UNKNOWN_MESSAGE UNKNOWN_MESSAGE}
      *     <br>The provided {@code messageId} is unknown in this MessageChannel, either due to the id being invalid, or
-     *         the message it referred to has already been deleted. This might also be triggered for ephemeral messages.</li>
+     *         the message it referred to has already been deleted. This might also be triggered for ephemeral messages, if the interaction expired.</li>
      *
      *     <li>{@link net.dv8tion.jda.api.requests.ErrorResponse#UNKNOWN_CHANNEL UNKNOWN_CHANNEL}
      *     <br>The request was attempted after the channel was deleted.</li>
@@ -1762,7 +1762,7 @@ public interface Message extends ISnowflake, Formattable
      *         or lost {@link Permission#MESSAGE_MANAGE}.</li>
      *
      *     <li>{@link net.dv8tion.jda.api.requests.ErrorResponse#UNKNOWN_MESSAGE UNKNOWN_MESSAGE}
-     *     <br>If the message has already been deleted. This might also be triggered for ephemeral messages.</li>
+     *     <br>If the message has already been deleted. This might also be triggered for ephemeral messages, if the interaction expired.</li>
      * </ul>
      *
      * @throws MissingAccessException
@@ -1776,8 +1776,8 @@ public interface Message extends ISnowflake, Formattable
      *         <ul>
      *              <li>If this Message was not sent by the currently logged in account and it was <b>not</b> sent in a
      *              {@link GuildChannel GuildChannel}.</li>
-     *              <li>If this Message is ephemeral</li>
      *              <li>If this message type cannot be deleted. (See {@link MessageType#canDelete()})</li>
+     *              <li>If this Message is ephemeral and the interaction expired.</li>
      *         </ul>
      *
      * @return {@link net.dv8tion.jda.api.requests.restaction.AuditableRestAction AuditableRestAction}
@@ -2714,16 +2714,16 @@ public interface Message extends ISnowflake, Formattable
         }
 
         /**
-         * Returns an {@link AttachmentProxy} for this attachment.
+         * Returns an {@link NamedAttachmentProxy} for this attachment.
          *
-         * @return Non-null {@link AttachmentProxy} of this attachment
+         * @return Non-null {@link NamedAttachmentProxy} of this attachment
          *
          * @see    #getProxyUrl()
          */
         @Nonnull
-        public AttachmentProxy getProxy()
+        public NamedAttachmentProxy getProxy()
         {
-            return new AttachmentProxy(width > 0 && height > 0 ? proxyUrl : url);
+            return new NamedAttachmentProxy(width > 0 && height > 0 ? proxyUrl : url, fileName);
         }
 
         /**
