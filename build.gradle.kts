@@ -129,14 +129,8 @@ dependencies {
 
     //General Utility
     implementation(libs.bundles.jackson)
-    val fastutilVersion = "8.5.15"
-    implementation("com.github.rfresh2.fastutil.sets:long-sets:$fastutilVersion")
-    implementation("com.github.rfresh2.fastutil.sets:int-sets:$fastutilVersion")
-    implementation("com.github.rfresh2.fastutil.maps:long-object-maps:$fastutilVersion")
-    implementation("com.github.rfresh2.fastutil.maps:int-object-maps:$fastutilVersion")
-    implementation("com.github.rfresh2.fastutil.maps:int-long-maps:$fastutilVersion")
-    implementation("com.github.rfresh2.fastutil.maps:long-long-maps:$fastutilVersion")
-    implementation("com.github.rfresh2.fastutil.maps:object-int-maps:$fastutilVersion")
+
+    implementation(libs.bundles.fastutil)
 
     //Audio crypto libraries
     implementation(libs.tink)
