@@ -42,7 +42,7 @@ import java.util.function.Consumer;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.openMocks;
 
-public class IntegrationTest
+public class IntegrationTest extends AbstractSnapshotTest
 {
     protected Random random = new Random();
     @Mock
@@ -85,7 +85,7 @@ public class IntegrationTest
     protected RestActionAssertions assertThatRequestFrom(@Nonnull RestAction<?> action)
     {
         expectedRequestCount += 1;
-        return RestActionAssertions.assertThatNextAction(requester, action)
+        return RestActionAssertions.assertThatNextAction(snapshotHandler, requester, action)
                 .withNormalizedBody(this::normalizeRequestBody);
     }
 

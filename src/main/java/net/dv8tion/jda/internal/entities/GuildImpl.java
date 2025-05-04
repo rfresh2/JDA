@@ -273,10 +273,12 @@ public class GuildImpl implements Guild
 
     @Nonnull
     @Override
-    public CommandEditAction editCommandById(@Nonnull String id)
+    public CommandEditAction editCommandById(@Nonnull Command.Type type, @Nonnull String id)
     {
         Checks.isSnowflake(id);
-        return new CommandEditActionImpl(this, id);
+        Checks.notNull(type, "CommandType");
+        Checks.check(type != Command.Type.UNKNOWN, "Type must not be UNKNOWN");
+        return new CommandEditActionImpl(this, type, id);
     }
 
     @Nonnull
@@ -1649,7 +1651,7 @@ public class GuildImpl implements Guild
 
         Set<Long> userIds = users.stream().map(UserSnowflake::getIdLong).collect(Collectors.toSet());
         DataObject body = DataObject.empty()
-                .put("user_ids", userIds)
+                .put("user_ids", DataArray.fromCollection(userIds))
                 .put("delete_message_seconds", deletionTime.getSeconds());
         Route.CompiledRoute route = Route.Guilds.BULK_BAN.compile(getId());
 
