@@ -47,6 +47,7 @@ import net.dv8tion.jda.api.hooks.InterfacedEventManager;
 import net.dv8tion.jda.api.hooks.VoiceDispatchInterceptor;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
+import net.dv8tion.jda.api.managers.ApplicationManager;
 import net.dv8tion.jda.api.managers.AudioManager;
 import net.dv8tion.jda.api.managers.Presence;
 import net.dv8tion.jda.api.requests.*;
@@ -67,6 +68,7 @@ import net.dv8tion.jda.internal.handle.GuildSetupController;
 import net.dv8tion.jda.internal.hooks.EventManagerProxy;
 import net.dv8tion.jda.internal.interactions.CommandDataImpl;
 import net.dv8tion.jda.internal.interactions.command.CommandImpl;
+import net.dv8tion.jda.internal.managers.ApplicationManagerImpl;
 import net.dv8tion.jda.internal.managers.AudioManagerImpl;
 import net.dv8tion.jda.internal.managers.DirectAudioControllerImpl;
 import net.dv8tion.jda.internal.managers.PresenceImpl;
@@ -1228,6 +1230,13 @@ public class JDAImpl implements JDA
 
     @Nonnull
     @Override
+    public ApplicationManager getApplicationManager()
+    {
+        return new ApplicationManagerImpl(this);
+    }
+
+    @Nonnull
+    @Override
     public RestAction<ApplicationInfo> retrieveApplicationInfo()
     {
         Route.CompiledRoute route = Route.Applications.GET_BOT_APPLICATION.compile();
@@ -1237,15 +1246,6 @@ public class JDAImpl implements JDA
             this.clientId = info.getId();
             return info;
         });
-    }
-
-    @Nonnull
-    @Override
-    public RestAction<Void> updateApplicationDescription(String description) {
-        Route.CompiledRoute route = Route.Applications.UPDATE_BOT_APPLICATION.compile();
-        DataObject object = DataObject.empty();
-        object.put("description", description);
-        return new RestActionImpl<>(this, route, object);
     }
 
     @Nonnull

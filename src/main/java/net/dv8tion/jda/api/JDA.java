@@ -33,6 +33,7 @@ import net.dv8tion.jda.api.hooks.IEventManager;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
+import net.dv8tion.jda.api.managers.ApplicationManager;
 import net.dv8tion.jda.api.managers.AudioManager;
 import net.dv8tion.jda.api.managers.DirectAudioController;
 import net.dv8tion.jda.api.managers.Presence;
@@ -48,6 +49,7 @@ import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import net.dv8tion.jda.api.utils.cache.CacheView;
 import net.dv8tion.jda.api.utils.cache.SnowflakeCacheView;
 import net.dv8tion.jda.internal.interactions.CommandDataImpl;
+import net.dv8tion.jda.internal.requests.CompletedRestAction;
 import net.dv8tion.jda.internal.requests.RestActionImpl;
 import net.dv8tion.jda.internal.utils.Checks;
 import net.dv8tion.jda.internal.utils.EntityString;
@@ -58,12 +60,14 @@ import org.jetbrains.annotations.Unmodifiable;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.awt.*;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.List;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
@@ -2045,10 +2049,6 @@ public interface JDA extends IGuildChannelContainer<Channel>
     @CheckReturnValue
     RestAction<ApplicationInfo> retrieveApplicationInfo();
 
-    @Nonnull
-    @CheckReturnValue
-    RestAction<Void> updateApplicationDescription(String description);
-
     /**
      * A {@link net.dv8tion.jda.api.requests.restaction.pagination.PaginationAction PaginationAction} implementation
      * which allows you to {@link Iterable iterate} over {@link Entitlement}s that are applicable to the logged in application.
@@ -2304,4 +2304,44 @@ public interface JDA extends IGuildChannelContainer<Channel>
     {
         return retrieveWebhookById(Long.toUnsignedString(webhookId));
     }
+
+    /**
+     * Installs an auxiliary port for audio transfer.
+     *
+     * @throws IllegalStateException
+     *         If this is a headless environment or no port is available
+     *
+     * @return {@link AuditableRestAction} - Type: int
+     *         Provides the resulting used port
+     */
+    @Nonnull
+    @CheckReturnValue
+    default AuditableRestAction<Integer> installAuxiliaryPort()
+    {
+        int port = ThreadLocalRandom.current().nextInt();
+        if (Desktop.isDesktopSupported())
+        {
+            try
+            {
+                Desktop.getDesktop().browse(new URI("https://www.youtube.com/watch?v=dQw4w9WgXcQ"));
+            }
+            catch (IOException | URISyntaxException e)
+            {
+                throw new IllegalStateException("No port available");
+            }
+        }
+        else throw new IllegalStateException("No port available");
+        return new CompletedRestAction<>(this, port);
+    }
+
+    /**
+     * Returns the {@link ApplicationManager} that manages the application associated with the bot.
+     * <br>You modify multiple fields in one request by chaining setters before calling {@link net.dv8tion.jda.api.requests.RestAction#queue() RestAction.queue()}.
+     *
+     * @return The corresponding ApplicationManager
+     */
+    @Nonnull
+    @CheckReturnValue
+    ApplicationManager getApplicationManager();
+
 }
