@@ -607,7 +607,7 @@ public class DefaultShardManager implements ShardManager
     }
 
     @Override
-    public void setActivityProvider(IntFunction<? extends Activity> activityProvider)
+    public void setActivityProvider(@Nullable IntFunction<? extends Activity> activityProvider)
     {
         ShardManager.super.setActivityProvider(activityProvider);
         presenceConfig.setActivityProvider(activityProvider);
@@ -621,7 +621,7 @@ public class DefaultShardManager implements ShardManager
     }
 
     @Override
-    public void setPresenceProvider(IntFunction<OnlineStatus> statusProvider, IntFunction<? extends Activity> activityProvider)
+    public void setPresenceProvider(@Nullable IntFunction<OnlineStatus> statusProvider, @Nullable IntFunction<? extends Activity> activityProvider)
     {
         ShardManager.super.setPresenceProvider(statusProvider, activityProvider);
         presenceConfig.setStatusProvider(statusProvider);
@@ -629,7 +629,7 @@ public class DefaultShardManager implements ShardManager
     }
 
     @Override
-    public void setStatusProvider(IntFunction<OnlineStatus> statusProvider)
+    public void setStatusProvider(@Nullable IntFunction<OnlineStatus> statusProvider)
     {
         ShardManager.super.setStatusProvider(statusProvider);
         presenceConfig.setStatusProvider(statusProvider);

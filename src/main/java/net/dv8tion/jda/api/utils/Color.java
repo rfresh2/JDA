@@ -123,7 +123,7 @@ public final class Color
      * @param hexColor the hex color in a valid format (#ffffff or ffffff)
      */
     @Nonnull
-    public static Color of(String hexColor) {
+    public static Color of(@Nonnull String hexColor) {
         hexColor = hexColor.replace("#", "");
         if (!hexColor.matches("^[0-9a-fA-F]+$")) {
             throw new IllegalArgumentException("Illegal HEX argument " + hexColor);
