@@ -14,17 +14,29 @@
  * limitations under the License.
  */
 
-//to build everything:             "gradlew build"
-//to build and upload everything:  "gradlew release"
-
+import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import de.undercouch.gradle.tasks.download.Download
+import net.dv8tion.jda.tasks.Version
+import net.dv8tion.jda.tasks.applyAudioExclusions
+import net.dv8tion.jda.tasks.applyOpusExclusions
+import net.dv8tion.jda.tasks.nullableReplacement
+import nl.littlerobots.vcu.plugin.resolver.VersionSelectors
 import org.apache.tools.ant.filters.ReplaceTokens
+import org.jreleaser.gradle.plugin.tasks.AbstractJReleaserTask
+import org.jreleaser.model.Active
 
 plugins {
+    environment
+    artifacts
     `java-library`
     `maven-publish`
 
     alias(libs.plugins.shadow)
+    alias(libs.plugins.versions)
+    alias(libs.plugins.version.catalog.update)
+    alias(libs.plugins.jreleaser)
+    alias(libs.plugins.download)
 }
 
 
@@ -34,35 +46,24 @@ plugins {
 //                                //
 ////////////////////////////////////
 
+projectEnvironment {
+    version = Version(major = "6", minor = "0", revision = System.getenv("PUBLISH_VERSION") ?: "0", classifier = "rc.1")
+}
+
+artifactFilters {
+    opusExclusions.addAll("natives/**", "com/sun/jna/**", "club/minnced/opus/util/*", "tomp2p/opuswrapper/*")
+    additionalAudioExclusions.addAll("com/google/crypto/tink/**", "com/google/gson/**", "com/google/protobuf/**", "google/protobuf/**")
+}
+
+// Use normal version string for new releases and commitHash for other builds
+if (projectEnvironment.canPublish) {
+    project.version = projectEnvironment.version.get().toString()
+} else {
+    project.version = "${projectEnvironment.version.get()}_${projectEnvironment.commitHash}"
+}
 
 val javaVersion = JavaVersion.current()
-val versionObj = Version(major = "5", minor = "6", revision = System.getenv("PUBLISH_VERSION") ?: "0", classifier = null)
-val isGithubAction = System.getProperty("GITHUB_ACTION") != null || System.getenv("GITHUB_ACTION") != null
-val isCI = System.getProperty("BUILD_NUMBER") != null // jenkins
-        || System.getenv("BUILD_NUMBER") != null
-        || System.getProperty("GIT_COMMIT") != null // jitpack
-        || System.getenv("GIT_COMMIT") != null
-        || isGithubAction // Github Actions
 
-// Check the commit hash and version information
-val commitHash: String by lazy {
-    val commit = System.getenv("GIT_COMMIT") ?: System.getProperty("GIT_COMMIT") ?: System.getenv("GITHUB_SHA")
-    // We only set the commit hash on CI builds since we don't want dirty local repos to set a wrong commit
-    if (isCI && commit != null)
-        commit.take(7)
-    else
-        "DEV"
-}
-
-val previousVersion: Version by lazy {
-    val file = layout.projectDirectory.file(".version").asFile
-    if (file.canRead())
-        Version.parse(file.readText().trim())
-    else
-        versionObj
-}
-
-project.version = "$versionObj"
 project.group = "com.github.rfresh2"
 
 base {
@@ -88,7 +89,6 @@ configure<SourceSetContainer> {
 //    Dependency Configuration    //
 //                                //
 ////////////////////////////////////
-
 
 repositories {
     maven("https://maven.2b2t.vc/releases") {
@@ -151,6 +151,23 @@ dependencies {
     testImplementation(libs.commons.lang3)
     testImplementation(libs.logback.classic)
     testImplementation(libs.archunit)
+
+    // OpenRewrite
+    // Import Rewrite's bill of materials.
+    testImplementation(platform("org.openrewrite.recipe:rewrite-recipe-bom:3.6.1"))
+
+    // rewrite-java dependencies only necessary for Java Recipe development
+    testImplementation("org.openrewrite:rewrite-java")
+    testImplementation("org.openrewrite.recipe:rewrite-java-dependencies")
+
+    // This is supposed to only be the version that corresponds to the current Java version,
+    // but as there are no toolchain, we include all, they can coexist safely tho.
+    testRuntimeOnly("org.openrewrite:rewrite-java-8")
+    testRuntimeOnly("org.openrewrite:rewrite-java-11")
+    testRuntimeOnly("org.openrewrite:rewrite-java-17")
+
+    // For authoring tests for any kind of Recipe
+    testImplementation("org.openrewrite:rewrite-test")
 }
 
 fun isNonStable(version: String): Boolean {
@@ -158,6 +175,18 @@ fun isNonStable(version: String): Boolean {
     val regex = "^[0-9,.v-]+(-r)?$".toRegex()
     val isStable = stableKeyword || regex.matches(version)
     return isStable.not()
+}
+
+tasks.withType<DependencyUpdatesTask> {
+    rejectVersionIf {
+        isNonStable(candidate.version)
+    }
+
+    gradleReleaseChannel = "current"
+}
+
+versionCatalogUpdate {
+    versionSelector(VersionSelectors.STABLE)
 }
 
 
@@ -169,9 +198,7 @@ fun isNonStable(version: String): Boolean {
 
 val jar by tasks.getting(Jar::class) {
     archiveBaseName.set(project.name)
-    manifest.attributes(
-            "Implementation-Version" to project.version,
-            "Automatic-Module-Name" to "net.dv8tion.jda")
+    manifest.attributes("Implementation-Version" to project.version, "Automatic-Module-Name" to "net.dv8tion.jda")
 }
 
 val shadowJar by tasks.getting(ShadowJar::class) {
@@ -182,12 +209,14 @@ val shadowJar by tasks.getting(ShadowJar::class) {
 val sourcesForRelease by tasks.registering(Copy::class) {
     from("src/main/java") {
         include("**/JDAInfo.java")
+        val version = projectEnvironment.version.get()
+
         val tokens = mapOf(
-            "versionMajor" to versionObj.major,
-            "versionMinor" to versionObj.minor,
-            "versionRevision" to versionObj.revision,
-            "versionClassifier" to nullableReplacement(versionObj.classifier),
-            "commitHash" to commitHash
+            "versionMajor" to version.major,
+            "versionMinor" to version.minor,
+            "versionRevision" to version.revision,
+            "versionClassifier" to nullableReplacement(version.classifier),
+            "commitHash" to projectEnvironment.commitHash
         )
         // Allow for setting null on some strings without breaking the source
         // for this, we have special tokens marked with "!@...@!" which are replaced to @...@
@@ -215,11 +244,7 @@ val noOpusJar by tasks.registering(ShadowJar::class) {
 
     configurations = shadowJar.configurations
     from(sourceSets["main"].output)
-    exclude("natives/**")     // ~2 MB
-    exclude("com/sun/jna/**") // ~1 MB
-    exclude("club/minnced/opus/util/*")
-    exclude("tomp2p/opuswrapper/*")
-
+    applyOpusExclusions(artifactFilters)
     manifest.inheritFrom(jar.manifest)
 }
 
@@ -230,14 +255,7 @@ val minimalJar by tasks.registering(ShadowJar::class) {
 
     configurations = shadowJar.configurations
     from(sourceSets["main"].output)
-    exclude("natives/**")     // ~2 MB
-    exclude("com/sun/jna/**") // ~1 MB
-    exclude("com/google/crypto/tink/**") // ~2 MB
-    exclude("com/google/gson/**") // ~300 KB
-    exclude("com/google/protobuf/**") // ~2 MB
-    exclude("google/protobuf/**")
-    exclude("club/minnced/opus/util/*")
-    exclude("tomp2p/opuswrapper/*")
+    applyAudioExclusions(artifactFilters)
     manifest.inheritFrom(jar.manifest)
 }
 
@@ -252,47 +270,44 @@ val sourcesJar by tasks.registering(Jar::class) {
 }
 
 val javadoc by tasks.getting(Javadoc::class) {
-    isFailOnError = isCI
-    options.memberLevel = JavadocMemberLevel.PUBLIC
-    options.encoding = "UTF-8"
+    isFailOnError = projectEnvironment.isGithubAction
 
-    (options as? StandardJavadocDocletOptions)?.let { opt ->
-        opt.author()
-        opt.tags("incubating:a:Incubating:")
-        opt.links(
-                "https://docs.oracle.com/javase/8/docs/api/",
-                "https://takahikokawasaki.github.io/nv-websocket-client/")
+    (options as? StandardJavadocDocletOptions)?.apply {
+        memberLevel = JavadocMemberLevel.PUBLIC
+        encoding = "UTF-8"
+
+        author()
+        tags("incubating:a:Incubating:")
+        links("https://docs.oracle.com/javase/8/docs/api/", "https://takahikokawasaki.github.io/nv-websocket-client/")
+
         if (JavaVersion.VERSION_1_8 < javaVersion) {
-            opt.addBooleanOption("html5", true) // Adds search bar
-            opt.addStringOption("-release", "8")
+            addBooleanOption("html5", true) // Adds search bar
+            addStringOption("-release", "8")
         }
+
         // Fix for https://stackoverflow.com/questions/52326318/maven-javadoc-search-redirects-to-undefined-url
         if (javaVersion in JavaVersion.VERSION_11..JavaVersion.VERSION_12) {
-            opt.addBooleanOption("-no-module-directories", true)
+            addBooleanOption("-no-module-directories", true)
         }
+
         // Java 13 changed accessibility rules.
         // On versions less than Java 13, we simply ignore the errors.
         // Both of these remove "no comment" warnings.
         if (javaVersion >= JavaVersion.VERSION_13) {
-            opt.addBooleanOption("Xdoclint:all,-missing", true)
+            addBooleanOption("Xdoclint:all,-missing", true)
         } else {
-            opt.addBooleanOption("Xdoclint:all,-missing,-accessibility", true)
+            addBooleanOption("Xdoclint:all,-missing,-accessibility", true)
         }
 
-        opt.overview = "$projectDir/overview.html"
+        overview = "$projectDir/overview.html"
     }
 
-    dependsOn(sourcesJar)
-    source = sourcesJar.get().source.asFileTree
-    exclude("MANIFEST.MF")
+    dependsOn(generateJavaSources)
+    source = generateJavaSources.get().source
 
-    //### excludes ###
-
-    //jda internals
-    exclude("net/dv8tion/jda/internal")
-
-    //voice crypto
-    exclude("com/iwebpp/crypto")
+    exclude {
+        it.file.absolutePath.contains("internal", ignoreCase=false)
+    }
 }
 
 val javadocJar by tasks.registering(Jar::class) {
@@ -327,6 +342,17 @@ val build by tasks.getting(Task::class) {
 
     jar.mustRunAfter(tasks.clean)
     shadowJar.mustRunAfter(sourcesJar)
+}
+
+val downloadRecipeClasspath by tasks.registering(Download::class) {
+    val targetVersion = "5.6.1"
+    src("https://repo.maven.apache.org/maven2/net/dv8tion/JDA/$targetVersion/JDA-$targetVersion.jar")
+    dest("src/test/resources/META-INF/rewrite/classpath/JDA-$targetVersion.jar")
+    overwrite(false)
+}
+
+tasks.named("processTestResources").configure {
+    dependsOn(downloadRecipeClasspath)
 }
 
 val test by tasks.getting(Test::class) {
@@ -386,6 +412,8 @@ components.java.withVariantsFromConfiguration(configurations.shadowRuntimeElemen
 val SoftwareComponentContainer.java
     get() = components.getByName<AdhocComponentWithVariants>("java")
 
+val stagingDirectory = layout.buildDirectory.dir("staging-deploy").get()
+
 publishing {
     repositories {
         maven("https://maven.2b2t.vc/releases") {
@@ -410,61 +438,8 @@ publishing {
             pom.populate()
         }
     }
-}
 
-////////////////////////////////////
-//                                //
-//   Release Task Configuration   //
-//                                //
-////////////////////////////////////
-
-
-val rebuild by tasks.registering(Task::class) {
-    group = "build"
-
-    dependsOn(build)
-    dependsOn(tasks.clean)
-    build.mustRunAfter(tasks.clean)
-}
-
-val publishingTasks = tasks.withType<PublishToMavenRepository> {
-    mustRunAfter(rebuild)
-    dependsOn(rebuild)
-}
-
-val release by tasks.registering(Task::class) {
-    group = "publishing"
-
-    dependsOn(publishingTasks)
-}
-
-
-////////////////////////////////////
-//                                //
-//            Helpers             //
-//                                //
-////////////////////////////////////
-
-fun nullableReplacement(string: String?): String {
-    return if (string == null) "null"
-    else "\"$string\""
-}
-
-data class Version(
-    val major: String,
-    val minor: String,
-    val revision: String,
-    val classifier: String? = null
-) {
-    companion object {
-        fun parse(string: String): Version {
-            val (major, minor, revision) = string.substringBefore("-").split(".")
-            val classifier = string.substringAfter("-").takeIf { "-" in string }
-            return Version(major, minor, revision, classifier)
-        }
-    }
-
-    override fun toString(): String {
-        return "$major.$minor.$revision" + if (classifier != null) "-$classifier" else ""
+    repositories.maven {
+        url = stagingDirectory.asFile.toURI()
     }
 }

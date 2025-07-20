@@ -17,7 +17,6 @@
 package net.dv8tion.jda.api;
 
 import net.dv8tion.jda.annotations.Incubating;
-import net.dv8tion.jda.annotations.ReplaceWith;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.Channel;
 import net.dv8tion.jda.api.entities.channel.attribute.IGuildChannelContainer;
@@ -808,53 +807,6 @@ public interface JDA extends IGuildChannelContainer<Channel>
     @Nonnull
     @CheckReturnValue
     CommandListUpdateAction updateCommands();
-
-    /**
-     * Edit an existing global command by id.
-     *
-     * <p>If there is no command with the provided ID,
-     * this RestAction fails with {@link net.dv8tion.jda.api.requests.ErrorResponse#UNKNOWN_COMMAND ErrorResponse.UNKNOWN_COMMAND}
-     *
-     * @param  id
-     *         The id of the command to edit
-     *
-     * @throws IllegalArgumentException
-     *         If the provided id is not a valid snowflake
-     *
-     * @return {@link CommandEditAction} used to edit the command
-     *
-     * @deprecated Use {@link #editCommandById(Command.Type, String)} instead
-     */
-    @Nonnull
-    @CheckReturnValue
-    @Deprecated
-    @ReplaceWith("editCommandById(Command.Type, id)")
-    default CommandEditAction editCommandById(@Nonnull String id)
-    {
-        return editCommandById(Command.Type.SLASH, id);
-    }
-
-    /**
-     * Edit an existing global command by id.
-     *
-     * <p>If there is no command with the provided ID,
-     * this RestAction fails with {@link net.dv8tion.jda.api.requests.ErrorResponse#UNKNOWN_COMMAND ErrorResponse.UNKNOWN_COMMAND}
-     *
-     * @param  id
-     *         The id of the command to edit
-     *
-     * @return {@link CommandEditAction} used to edit the command
-     *
-     * @deprecated Use {@link #editCommandById(Command.Type, long)} instead
-     */
-    @Nonnull
-    @CheckReturnValue
-    @Deprecated
-    @ReplaceWith("editCommandById(Command.Type, id)")
-    default CommandEditAction editCommandById(long id)
-    {
-        return editCommandById(Long.toUnsignedString(id));
-    }
 
     /**
      * Edit an existing global command by id.
