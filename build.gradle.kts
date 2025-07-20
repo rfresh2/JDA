@@ -56,11 +56,13 @@ artifactFilters {
 }
 
 // Use normal version string for new releases and commitHash for other builds
-if (projectEnvironment.canPublish) {
-    project.version = projectEnvironment.version.get().toString()
-} else {
-    project.version = "${projectEnvironment.version.get()}_${projectEnvironment.commitHash}"
-}
+//if (projectEnvironment.canPublish) {
+//    project.version = projectEnvironment.version.get().toString()
+//} else {
+//    project.version = "${projectEnvironment.version.get()}_${projectEnvironment.commitHash}"
+//}
+
+project.version = projectEnvironment.version.get().toString()
 
 val javaVersion = JavaVersion.current()
 
