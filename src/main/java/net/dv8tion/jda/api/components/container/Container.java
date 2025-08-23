@@ -23,15 +23,16 @@ import net.dv8tion.jda.api.components.attribute.IDisableable;
 import net.dv8tion.jda.api.components.replacer.ComponentReplacer;
 import net.dv8tion.jda.api.components.replacer.IReplaceable;
 import net.dv8tion.jda.api.components.utils.ComponentIterator;
+import net.dv8tion.jda.api.utils.Color;
 import net.dv8tion.jda.api.utils.messages.MessageRequest;
 import net.dv8tion.jda.internal.components.container.ContainerImpl;
+import net.dv8tion.jda.internal.utils.Checks;
 import net.dv8tion.jda.internal.utils.Helpers;
 import org.jetbrains.annotations.Unmodifiable;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.awt.*;
 import java.util.Collection;
 import java.util.List;
 
@@ -129,7 +130,6 @@ public interface Container extends MessageTopLevelComponent, IReplaceable, IDisa
 
     /**
      * Creates a new {@link Container} with the specified accent color, which appears on the side.
-     * <br>Note that the {@link Color#getAlpha() alpha component} will be removed, making the color opaque.
      *
      * @param  accentColor
      *         The new accent color, or {@code null} to remove it
@@ -155,6 +155,43 @@ public interface Container extends MessageTopLevelComponent, IReplaceable, IDisa
     @Nonnull
     @CheckReturnValue
     Container withSpoiler(boolean spoiler);
+
+    /**
+     * Creates a new {@link Container} with the specified components.
+     *
+     * @param  components
+     *         The new components
+     *
+     * @throws IllegalArgumentException
+     *         If the provided components are {@code null} or contains {@code null}
+     *
+     * @return The new {@link Container}
+     */
+    @Nonnull
+    @CheckReturnValue
+    Container withComponents(@Nonnull Collection<? extends ContainerChildComponent> components);
+
+    /**
+     * Creates a new {@link Container} with the specified components.
+     *
+     * @param  component
+     *         The first new component
+     * @param  components
+     *         Additional new components
+     *
+     * @throws IllegalArgumentException
+     *         If the provided components are {@code null} or contains {@code null}
+     *
+     * @return The new {@link Container}
+     */
+    @Nonnull
+    @CheckReturnValue
+    default Container withComponents(@Nonnull ContainerChildComponent component, @Nonnull ContainerChildComponent... components)
+    {
+        Checks.notNull(component, "Component");
+        Checks.notNull(components, "Components");
+        return withComponents(Helpers.mergeVararg(component, components));
+    }
 
     @Nonnull
     @Override
@@ -216,7 +253,7 @@ public interface Container extends MessageTopLevelComponent, IReplaceable, IDisa
     @Nullable
     default Color getAccentColor()
     {
-        return getAccentColorRaw() != null ? new Color(getAccentColorRaw()) : null;
+        return getAccentColorRaw() != null ? Color.of(getAccentColorRaw()) : null;
     }
 
     /**
