@@ -23,8 +23,8 @@ import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.audit.ActionType;
 import net.dv8tion.jda.api.audit.AuditLogChange;
 import net.dv8tion.jda.api.audit.AuditLogEntry;
-import net.dv8tion.jda.api.components.Components;
 import net.dv8tion.jda.api.components.MessageTopLevelComponentUnion;
+import net.dv8tion.jda.api.components.utils.ComponentDeserializer;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.Guild.ExplicitContentLevel;
 import net.dv8tion.jda.api.entities.Guild.NotificationLevel;
@@ -104,6 +104,7 @@ public class EntityBuilder extends AbstractEntityBuilder
     public static final String MISSING_CHANNEL = "MISSING_CHANNEL";
     public static final String MISSING_USER = "MISSING_USER";
     public static final String UNKNOWN_MESSAGE_TYPE = "UNKNOWN_MESSAGE_TYPE";
+    public static final ComponentDeserializer DEFAULT_COMPONENT_DESERIALIZER = new ComponentDeserializer(Collections.emptyList());
     private static final Set<String> richGameFields;
     static
     {
@@ -1143,7 +1144,9 @@ public class EntityBuilder extends AbstractEntityBuilder
         }
 
         configureCategory(json, channel);
-        createOverridesPass(channel, json.getArray("permission_overwrites"));
+        Optional<DataArray> permissionOverwrites = json.optArray("permission_overwrites");
+        if (permissionOverwrites.isPresent())
+            createOverridesPass(channel, permissionOverwrites.get());
         if (playbackCache)
             getJDA().getEventCache().playbackCache(EventCache.Type.CHANNEL, id);
         return channel;
@@ -1181,7 +1184,9 @@ public class EntityBuilder extends AbstractEntityBuilder
         }
 
         configureTextChannel(json, channel);
-        createOverridesPass(channel, json.getArray("permission_overwrites"));
+        Optional<DataArray> permissionOverwrites = json.optArray("permission_overwrites");
+        if (permissionOverwrites.isPresent())
+            createOverridesPass(channel, permissionOverwrites.get());
         if (playbackCache)
             getJDA().getEventCache().playbackCache(EventCache.Type.CHANNEL, id);
         return channel;
@@ -1219,7 +1224,9 @@ public class EntityBuilder extends AbstractEntityBuilder
         }
 
         configureNewsChannel(json, channel);
-        createOverridesPass(channel, json.getArray("permission_overwrites"));
+        Optional<DataArray> permissionOverwrites = json.optArray("permission_overwrites");
+        if (permissionOverwrites.isPresent())
+            createOverridesPass(channel, permissionOverwrites.get());
         if (playbackCache)
             getJDA().getEventCache().playbackCache(EventCache.Type.CHANNEL, id);
         return channel;
@@ -1256,7 +1263,9 @@ public class EntityBuilder extends AbstractEntityBuilder
         }
 
         configureVoiceChannel(json, channel);
-        createOverridesPass(channel, json.getArray("permission_overwrites"));
+        Optional<DataArray> permissionOverwrites = json.optArray("permission_overwrites");
+        if (permissionOverwrites.isPresent())
+            createOverridesPass(channel, permissionOverwrites.get());
         if (playbackCache)
             getJDA().getEventCache().playbackCache(EventCache.Type.CHANNEL, id);
         return channel;
@@ -1293,7 +1302,9 @@ public class EntityBuilder extends AbstractEntityBuilder
         }
 
         configureStageChannel(json, channel);
-        createOverridesPass(channel, json.getArray("permission_overwrites"));
+        Optional<DataArray> permissionOverwrites = json.optArray("permission_overwrites");
+        if (permissionOverwrites.isPresent())
+            createOverridesPass(channel, permissionOverwrites.get());
         if (playbackCache)
             getJDA().getEventCache().playbackCache(EventCache.Type.CHANNEL, id);
         return channel;
@@ -1417,7 +1428,9 @@ public class EntityBuilder extends AbstractEntityBuilder
             }
         }
         configureForumChannel(json, channel);
-        createOverridesPass(channel, json.getArray("permission_overwrites"));
+        Optional<DataArray> permissionOverwrites = json.optArray("permission_overwrites");
+        if (permissionOverwrites.isPresent())
+            createOverridesPass(channel, permissionOverwrites.get());
         if (playbackCache)
             getJDA().getEventCache().playbackCache(EventCache.Type.CHANNEL, id);
         return channel;
@@ -1453,7 +1466,9 @@ public class EntityBuilder extends AbstractEntityBuilder
             }
         }
         configureMediaChannel(json, channel);
-        createOverridesPass(channel, json.getArray("permission_overwrites"));
+        Optional<DataArray> permissionOverwrites = json.optArray("permission_overwrites");
+        if (permissionOverwrites.isPresent())
+            createOverridesPass(channel, permissionOverwrites.get());
         if (playbackCache)
             getJDA().getEventCache().playbackCache(EventCache.Type.CHANNEL, id);
         return channel;
@@ -1702,7 +1717,8 @@ public class EntityBuilder extends AbstractEntityBuilder
         final List<MessageReaction>               reactions   = map(jsonObject, "reactions",     (obj) -> createMessageReaction(tmpChannel, channelId, id, obj));
         final List<StickerItem>                   stickers    = map(jsonObject, "sticker_items", this::createStickerItem);
         // Keep the unknown components so the user can read them if they want
-        final List<MessageTopLevelComponentUnion> components  = map(jsonObject, "components",    (obj) -> Components.parseComponent(MessageTopLevelComponentUnion.class, obj));
+        final List<MessageTopLevelComponentUnion> components  = map(jsonObject, "components",
+                (obj) -> DEFAULT_COMPONENT_DESERIALIZER.deserializeAs(MessageTopLevelComponentUnion.class, obj));
 
         MessagePoll poll = jsonObject.optObject("poll").map(EntityBuilder::createMessagePoll).orElse(null);
 
@@ -2155,7 +2171,8 @@ public class EntityBuilder extends AbstractEntityBuilder
         List<MessageEmbed>                  embeds      = map(jsonObject, "embeds",        this::createMessageEmbed);
         List<StickerItem>                   stickers    = map(jsonObject, "sticker_items", this::createStickerItem);
         // Keep the unknown components so the user can read them if they want
-        List<MessageTopLevelComponentUnion> components  = map(jsonObject, "components",    (obj) -> Components.parseComponent(MessageTopLevelComponentUnion.class, obj));
+        List<MessageTopLevelComponentUnion> components  = map(jsonObject, "components",    (obj) ->
+                DEFAULT_COMPONENT_DESERIALIZER.deserializeAs(MessageTopLevelComponentUnion.class, obj));
 
         Guild guild = messageReference.getGuild();
         // Lazy Mention parsing and caching (includes reply mentions)

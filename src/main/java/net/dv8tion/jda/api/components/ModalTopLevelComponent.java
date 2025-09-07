@@ -16,14 +16,12 @@
 
 package net.dv8tion.jda.api.components;
 
-import net.dv8tion.jda.api.components.actionrow.ActionRow;
-
 import javax.annotation.Nonnull;
 
 /**
  * Represents a component that can be added directly to a modal, this includes:
  * <ul>
- *     <li>{@link ActionRow}</li>
+ *     <li>{@link net.dv8tion.jda.api.components.label.Label Label}</li>
  * </ul>
  */
 public interface ModalTopLevelComponent extends Component
