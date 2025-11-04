@@ -17,10 +17,7 @@
 import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import de.undercouch.gradle.tasks.download.Download
-import net.dv8tion.jda.tasks.Version
-import net.dv8tion.jda.tasks.applyAudioExclusions
-import net.dv8tion.jda.tasks.applyOpusExclusions
-import net.dv8tion.jda.tasks.nullableReplacement
+import net.dv8tion.jda.tasks.*
 import nl.littlerobots.vcu.plugin.resolver.VersionSelectors
 import org.apache.tools.ant.filters.ReplaceTokens
 import org.jreleaser.gradle.plugin.tasks.AbstractJReleaserTask
@@ -288,24 +285,7 @@ val javadoc by tasks.getting(Javadoc::class) {
         tags("incubating:a:Incubating:")
         links("https://docs.oracle.com/javase/8/docs/api/", "https://takahikokawasaki.github.io/nv-websocket-client/")
 
-        if (JavaVersion.VERSION_1_8 < javaVersion) {
-            addBooleanOption("html5", true) // Adds search bar
-            addStringOption("-release", "8")
-        }
-
-        // Fix for https://stackoverflow.com/questions/52326318/maven-javadoc-search-redirects-to-undefined-url
-        if (javaVersion in JavaVersion.VERSION_11..JavaVersion.VERSION_12) {
-            addBooleanOption("-no-module-directories", true)
-        }
-
-        // Java 13 changed accessibility rules.
-        // On versions less than Java 13, we simply ignore the errors.
-        // Both of these remove "no comment" warnings.
-        if (javaVersion >= JavaVersion.VERSION_13) {
-            addBooleanOption("Xdoclint:all,-missing", true)
-        } else {
-            addBooleanOption("Xdoclint:all,-missing,-accessibility", true)
-        }
+        addBooleanOption("Xdoclint:all,-missing", true)
 
         overview = "$projectDir/overview.html"
     }
@@ -329,11 +309,11 @@ tasks.withType<JavaCompile> {
     options.isIncremental = true
 
     val args = mutableListOf("-Xlint:deprecation", "-Xlint:unchecked")
-
+    options.release = 21
     options.compilerArgs.addAll(args)
 }
 
-tasks.named<JavaCompile>("compileJava").configure {
+val compileJava by tasks.getting(JavaCompile::class) {
     dependsOn(generateJavaSources)
     source = generateJavaSources.get().source
 }
@@ -398,6 +378,17 @@ tasks.test {
         html.required = projectEnvironment.isGithubAction
     }
 }
+
+val verifyBytecodeVersion by tasks.registering(VerifyBytecodeVersion::class) {
+    group = "verification"
+
+    expectedMajorVersion = 52
+    classes.from(compileJava.outputs.files.asFileTree.matching {
+        include("**/*.class")
+    })
+}
+
+//compileJava.finalizedBy(verifyBytecodeVersion)
 
 
 ////////////////////////////////////

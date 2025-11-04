@@ -250,6 +250,8 @@ public class ChannelCacheViewImpl<T extends Channel> extends ReadWriteLockCache<
         protected FilteredCacheView(Class<C> type)
         {
             Checks.notNull(type, "Type");
+            checkChannelInterface(type);
+
             this.type = type;
 
             this.filteredMaps = caches.entrySet()
@@ -257,6 +259,14 @@ public class ChannelCacheViewImpl<T extends Channel> extends ReadWriteLockCache<
                 .filter(entry -> entry.getKey() != null && type.isAssignableFrom(entry.getKey().getInterface()))
                 .map(entry -> (Long2ObjectMap<C>) entry.getValue())
                 .collect(Collectors.toList());
+        }
+
+        private void checkChannelInterface(Class<C> type)
+        {
+            boolean isValidInterfaceType = false;
+            for (ChannelType channelType : ChannelType.values())
+                isValidInterfaceType |= type.isAssignableFrom(channelType.getInterface());
+            Checks.check(isValidInterfaceType, "Type %s is not a valid channel interface", type.getSimpleName());
         }
 
         protected void removeIf(Predicate<? super C> filter)

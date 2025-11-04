@@ -14,25 +14,21 @@
  * limitations under the License.
  */
 
-package net.dv8tion.jda.api.requests;
+package net.dv8tion.jda.test.util;
 
-/**
- * Enum used to specify the HTTP method to use for a request.
- */
-public enum Method
+import net.dv8tion.jda.api.utils.FileUpload;
+
+import java.io.InputStream;
+
+public class TestResourceUtil
 {
-    DELETE,
-    GET,
-    HEAD,
-    OPTIONS,
-    POST,
-    PUT,
-    PATCH;
-
-    public boolean requiresRequestBody() 
+    public static InputStream getResource(String path)
     {
-        return this == POST
-            || this == PUT
-            || this == PATCH;
+        return TestResourceUtil.class.getResourceAsStream("/" + path);
+    }
+
+    public static FileUpload getFileUpload(String name)
+    {
+        return FileUpload.fromData(getResource(name), name);
     }
 }
