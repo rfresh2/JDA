@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package net.dv8tion.jda.internal.entities;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
@@ -27,13 +28,13 @@ import net.dv8tion.jda.api.utils.data.DataArray;
 import net.dv8tion.jda.api.utils.data.DataObject;
 import net.dv8tion.jda.internal.utils.EntityString;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class WidgetImpl implements Widget
-{
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+public class WidgetImpl implements Widget {
     private final boolean isAvailable;
     private final long id;
     private final String name;
@@ -44,8 +45,7 @@ public class WidgetImpl implements Widget
     /**
      * Constructs an unavailable Widget
      */
-    public WidgetImpl(long guildId)
-    {
+    public WidgetImpl(long guildId) {
         isAvailable = false;
         id = guildId;
         name = null;
@@ -60,11 +60,11 @@ public class WidgetImpl implements Widget
      * @param json
      *        The {@link net.dv8tion.jda.api.utils.data.DataObject DataObject} to construct the Widget from
      */
-    public WidgetImpl(@Nonnull DataObject json)
-    {
+    public WidgetImpl(@Nonnull DataObject json) {
         String inviteCode = json.getString("instant_invite", null);
-        if (inviteCode != null)
+        if (inviteCode != null) {
             inviteCode = inviteCode.substring(inviteCode.lastIndexOf("/") + 1);
+        }
 
         isAvailable = true;
         id = json.getLong("id");
@@ -74,21 +74,20 @@ public class WidgetImpl implements Widget
         members = MiscUtil.newLongMap();
 
         DataArray channelsJson = json.getArray("channels");
-        for (int i = 0; i < channelsJson.length(); i++)
-        {
+        for (int i = 0; i < channelsJson.length(); i++) {
             DataObject channel = channelsJson.getObject(i);
             channels.put(channel.getLong("id"), new VoiceChannelImpl(channel, this));
         }
 
         DataArray membersJson = json.getArray("members");
-        for (int i = 0; i<membersJson.length(); i++)
-        {
+        for (int i = 0; i < membersJson.length(); i++) {
             DataObject memberJson = membersJson.getObject(i);
             MemberImpl member = new MemberImpl(memberJson, this);
             if (!memberJson.isNull("channel_id")) // voice state
             {
                 VoiceChannelImpl channel = channels.get(memberJson.getLong("channel_id"));
-                member.setVoiceState(new VoiceStateImpl(channel,
+                member.setVoiceState(new VoiceStateImpl(
+                        channel,
                         memberJson.getBoolean("mute"),
                         memberJson.getBoolean("deaf"),
                         memberJson.getBoolean("suppress"),
@@ -103,21 +102,18 @@ public class WidgetImpl implements Widget
     }
 
     @Override
-    public boolean isAvailable()
-    {
+    public boolean isAvailable() {
         return isAvailable;
     }
 
     @Override
-    public long getIdLong()
-    {
+    public long getIdLong() {
         return id;
     }
 
     @Override
     @Nonnull
-    public String getName()
-    {
+    public String getName() {
         checkAvailable();
 
         return name;
@@ -125,8 +121,7 @@ public class WidgetImpl implements Widget
 
     @Override
     @Nullable
-    public String getInviteCode()
-    {
+    public String getInviteCode() {
         checkAvailable();
 
         return invite;
@@ -134,8 +129,7 @@ public class WidgetImpl implements Widget
 
     @Override
     @Nonnull
-    public List<VoiceChannel> getVoiceChannels()
-    {
+    public List<VoiceChannel> getVoiceChannels() {
         checkAvailable();
 
         return List.copyOf(channels.values());
@@ -143,8 +137,7 @@ public class WidgetImpl implements Widget
 
     @Override
     @Nullable
-    public VoiceChannel getVoiceChannelById(@Nonnull String id)
-    {
+    public VoiceChannel getVoiceChannelById(@Nonnull String id) {
         checkAvailable();
 
         return channels.get(MiscUtil.parseSnowflake(id));
@@ -152,8 +145,7 @@ public class WidgetImpl implements Widget
 
     @Override
     @Nullable
-    public VoiceChannel getVoiceChannelById(long id)
-    {
+    public VoiceChannel getVoiceChannelById(long id) {
         checkAvailable();
 
         return channels.get(id);
@@ -161,8 +153,7 @@ public class WidgetImpl implements Widget
 
     @Override
     @Nonnull
-    public List<Member> getMembers()
-    {
+    public List<Member> getMembers() {
         checkAvailable();
 
         return List.copyOf(members.values());
@@ -170,8 +161,7 @@ public class WidgetImpl implements Widget
 
     @Override
     @Nullable
-    public Member getMemberById(@Nonnull String id)
-    {
+    public Member getMemberById(@Nonnull String id) {
         checkAvailable();
 
         return members.get(MiscUtil.parseSnowflake(id));
@@ -179,8 +169,7 @@ public class WidgetImpl implements Widget
 
     @Override
     @Nullable
-    public Member getMemberById(long id)
-    {
+    public Member getMemberById(long id) {
         checkAvailable();
 
         return members.get(id);
@@ -193,29 +182,29 @@ public class WidgetImpl implements Widget
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof WidgetImpl))
+        if (!(obj instanceof WidgetImpl)) {
             return false;
+        }
         WidgetImpl oWidget = (WidgetImpl) obj;
         return this == oWidget || this.id == oWidget.getIdLong();
     }
 
     @Override
-    public String toString()
-    {
-        final EntityString entityString = new EntityString(this);
-        if (isAvailable())
+    public String toString() {
+        EntityString entityString = new EntityString(this);
+        if (isAvailable()) {
             entityString.setName(getName());
+        }
         return entityString.toString();
     }
 
-    private void checkAvailable()
-    {
-        if (!isAvailable)
+    private void checkAvailable() {
+        if (!isAvailable) {
             throw new IllegalStateException("The widget for this Guild is unavailable!");
+        }
     }
 
-    public class MemberImpl implements Member
-    {
+    public class MemberImpl implements Member {
         private final boolean bot;
         private final long id;
         private final String username;
@@ -227,8 +216,7 @@ public class WidgetImpl implements Widget
         private final WidgetImpl widget;
         private VoiceState state;
 
-        private MemberImpl(@Nonnull DataObject json, @Nonnull WidgetImpl widget)
-        {
+        private MemberImpl(@Nonnull DataObject json, @Nonnull WidgetImpl widget) {
             this.widget = widget;
             this.bot = json.getBoolean("bot");
             this.id = json.getLong("id");
@@ -240,142 +228,124 @@ public class WidgetImpl implements Widget
             this.game = json.isNull("game") ? null : EntityBuilder.createActivity(json.getObject("game"));
         }
 
-        private void setVoiceState(VoiceState voiceState)
-        {
+        private void setVoiceState(VoiceState voiceState) {
             state = voiceState;
         }
 
         @Override
-        public boolean isBot()
-        {
+        public boolean isBot() {
             return bot;
         }
 
         @Override
         @Nonnull
-        public String getName()
-        {
+        public String getName() {
             return username;
         }
 
         @Override
-        public long getIdLong()
-        {
+        public long getIdLong() {
             return id;
         }
 
         @Nonnull
         @Override
-        public String getAsMention()
-        {
+        public String getAsMention() {
             return "<@" + getId() + ">";
         }
 
         @Override
         @Nonnull
-        public String getDiscriminator()
-        {
+        public String getDiscriminator() {
             return discriminator;
         }
 
         @Override
         @Nullable
-        public String getAvatarId()
-        {
+        public String getAvatarId() {
             return avatar;
         }
 
         @Override
         @Nullable
-        public String getAvatarUrl()
-        {
+        public String getAvatarUrl() {
             String avatarId = getAvatarId();
-            return avatarId == null ? null : String.format(User.AVATAR_URL, getId(), avatarId, avatarId.startsWith("a_") ? ".gif" : ".png");
+            return avatarId == null
+                    ? null
+                    : String.format(User.AVATAR_URL, getId(), avatarId, avatarId.startsWith("a_") ? ".gif" : ".png");
         }
 
         @Override
         @Nullable
-        public ImageProxy getAvatar()
-        {
-            final String avatarUrl = getAvatarUrl();
+        public ImageProxy getAvatar() {
+            String avatarUrl = getAvatarUrl();
             return avatarUrl == null ? null : new ImageProxy(avatarUrl);
         }
 
         @Override
         @Nonnull
-        public String getDefaultAvatarId()
-        {
+        public String getDefaultAvatarId() {
             return String.valueOf(Integer.parseInt(getDiscriminator()) % 5);
         }
 
         @Override
         @Nonnull
-        public String getDefaultAvatarUrl()
-        {
+        public String getDefaultAvatarUrl() {
             return String.format(User.DEFAULT_AVATAR_URL, getDefaultAvatarId());
         }
 
         @Override
         @Nonnull
-        public ImageProxy getDefaultAvatar()
-        {
+        public ImageProxy getDefaultAvatar() {
             return new ImageProxy(getDefaultAvatarUrl());
         }
 
         @Override
         @Nonnull
-        public String getEffectiveAvatarUrl()
-        {
+        public String getEffectiveAvatarUrl() {
             String avatarUrl = getAvatarUrl();
             return avatarUrl == null ? getDefaultAvatarUrl() : avatarUrl;
         }
 
         @Override
         @Nonnull
-        public ImageProxy getEffectiveAvatar()
-        {
+        public ImageProxy getEffectiveAvatar() {
             return new ImageProxy(getEffectiveAvatarUrl());
         }
 
         @Override
         @Nullable
-        public String getNickname()
-        {
+        public String getNickname() {
             return nickname;
         }
 
         @Override
         @Nonnull
-        public String getEffectiveName()
-        {
+        public String getEffectiveName() {
             return nickname == null ? username : nickname;
         }
 
         @Override
         @Nonnull
-        public OnlineStatus getOnlineStatus()
-        {
+        public OnlineStatus getOnlineStatus() {
             return status;
         }
 
         @Override
         @Nullable
-        public Activity getActivity()
-        {
+        public Activity getActivity() {
             return game;
         }
 
         @Override
         @Nonnull
-        public VoiceState getVoiceState()
-        {
+        public VoiceState getVoiceState() {
             return state == null ? new VoiceStateImpl(this, widget) : state;
         }
 
         @Override
         @Nonnull
-        public WidgetImpl getWidget()
-        {
+        public WidgetImpl getWidget() {
             return widget;
         }
 
@@ -386,31 +356,29 @@ public class WidgetImpl implements Widget
 
         @Override
         public boolean equals(Object obj) {
-            if (!(obj instanceof Member))
+            if (!(obj instanceof Member)) {
                 return false;
+            }
             Member oMember = (Member) obj;
-            return this == oMember || (this.id == oMember.getIdLong() && this.widget.getIdLong() == oMember.getWidget().getIdLong());
+            return this == oMember
+                    || (this.id == oMember.getIdLong()
+                            && this.widget.getIdLong() == oMember.getWidget().getIdLong());
         }
 
         @Override
-        public String toString()
-        {
-            return new EntityString(this)
-                    .setName(getName())
-                    .toString();
+        public String toString() {
+            return new EntityString(this).setName(getName()).toString();
         }
     }
 
-    public class VoiceChannelImpl implements VoiceChannel
-    {
+    public class VoiceChannelImpl implements VoiceChannel {
         private final int position;
         private final long id;
         private final String name;
         private final List<Member> members;
         private final Widget widget;
 
-        private VoiceChannelImpl(@Nonnull DataObject json, @Nonnull Widget widget)
-        {
+        private VoiceChannelImpl(@Nonnull DataObject json, @Nonnull Widget widget) {
             this.widget = widget;
             this.position = json.getInt("position");
             this.id = json.getLong("id");
@@ -418,41 +386,35 @@ public class WidgetImpl implements Widget
             this.members = new ArrayList<>();
         }
 
-        private void addMember(@Nonnull Member member)
-        {
+        private void addMember(@Nonnull Member member) {
             members.add(member);
         }
 
         @Override
-        public int getPosition()
-        {
+        public int getPosition() {
             return position;
         }
 
         @Override
-        public long getIdLong()
-        {
+        public long getIdLong() {
             return id;
         }
 
         @Override
         @Nonnull
-        public String getName()
-        {
+        public String getName() {
             return name;
         }
 
         @Override
         @Nonnull
-        public List<Member> getMembers()
-        {
+        public List<Member> getMembers() {
             return members;
         }
 
         @Override
         @Nonnull
-        public Widget getWidget()
-        {
+        public Widget getWidget() {
             return widget;
         }
 
@@ -463,23 +425,20 @@ public class WidgetImpl implements Widget
 
         @Override
         public boolean equals(Object obj) {
-            if (!(obj instanceof VoiceChannel))
+            if (!(obj instanceof VoiceChannel)) {
                 return false;
+            }
             VoiceChannel oVChannel = (VoiceChannel) obj;
             return this == oVChannel || this.id == oVChannel.getIdLong();
         }
 
         @Override
-        public String toString()
-        {
-            return new EntityString(this)
-                    .setName(getName())
-                    .toString();
+        public String toString() {
+            return new EntityString(this).setName(getName()).toString();
         }
     }
 
-    public class VoiceStateImpl implements VoiceState
-    {
+    public class VoiceStateImpl implements VoiceState {
         private final VoiceChannel channel;
         private final boolean muted;
         private final boolean deafened;
@@ -489,13 +448,19 @@ public class WidgetImpl implements Widget
         private final Member member;
         private final Widget widget;
 
-        private VoiceStateImpl(@Nonnull Member member, @Nonnull Widget widget)
-        {
+        private VoiceStateImpl(@Nonnull Member member, @Nonnull Widget widget) {
             this(null, false, false, false, false, false, member, widget);
         }
 
-        private VoiceStateImpl(@Nullable VoiceChannel channel, boolean muted, boolean deafened, boolean suppress, boolean selfMute, boolean selfDeaf, @Nonnull Member member, @Nonnull Widget widget)
-        {
+        private VoiceStateImpl(
+                @Nullable VoiceChannel channel,
+                boolean muted,
+                boolean deafened,
+                boolean suppress,
+                boolean selfMute,
+                boolean selfDeaf,
+                @Nonnull Member member,
+                @Nonnull Widget widget) {
             this.channel = channel;
             this.muted = muted;
             this.deafened = deafened;
@@ -508,70 +473,59 @@ public class WidgetImpl implements Widget
 
         @Override
         @Nullable
-        public VoiceChannel getChannel()
-        {
+        public VoiceChannel getChannel() {
             return channel;
         }
 
         @Override
-        public boolean inVoiceChannel()
-        {
+        public boolean inVoiceChannel() {
             return channel != null;
         }
 
         @Override
-        public boolean isGuildMuted()
-        {
+        public boolean isGuildMuted() {
             return muted;
         }
 
         @Override
-        public boolean isGuildDeafened()
-        {
+        public boolean isGuildDeafened() {
             return deafened;
         }
 
         @Override
-        public boolean isSuppressed()
-        {
+        public boolean isSuppressed() {
             return suppress;
         }
 
         @Override
-        public boolean isSelfMuted()
-        {
+        public boolean isSelfMuted() {
             return selfMute;
         }
 
         @Override
-        public boolean isSelfDeafened()
-        {
+        public boolean isSelfDeafened() {
             return selfDeaf;
         }
 
         @Override
-        public boolean isMuted()
-        {
+        public boolean isMuted() {
             return selfMute || muted;
         }
 
         @Override
-        public boolean isDeafened()
-        {
+        public boolean isDeafened() {
             return selfDeaf || deafened;
         }
 
         @Override
         @Nonnull
-        public Member getMember()
-        {
+        public Member getMember() {
             return member;
         }
 
         @Override
         @Nonnull
-        public Widget getWidget()
-        {
+        public Widget getWidget() {
             return widget;
         }
 
@@ -582,8 +536,9 @@ public class WidgetImpl implements Widget
 
         @Override
         public boolean equals(Object obj) {
-            if (!(obj instanceof VoiceState))
+            if (!(obj instanceof VoiceState)) {
                 return false;
+            }
             VoiceState oState = (VoiceState) obj;
             return this == oState || (this.member.equals(oState.getMember()) && this.widget.equals(oState.getWidget()));
         }

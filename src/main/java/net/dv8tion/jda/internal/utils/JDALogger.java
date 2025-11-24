@@ -18,18 +18,9 @@ package net.dv8tion.jda.internal.utils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.helpers.NOPLogger;
-import org.slf4j.spi.SLF4JServiceProvider;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.ServiceLoader;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * This class serves as a LoggerFactory for JDA's internals.
@@ -37,8 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * <p>
  * It also has the utility method {@link #getLazyString(LazyEvaluation)} which is used to lazily construct Strings for Logging.
  */
-public class JDALogger
-{
+public class JDALogger {
     private JDALogger() {}
 
     /**
@@ -52,8 +42,7 @@ public class JDALogger
      *
      * @return Logger with given log name
      */
-    public static Logger getLog(String name)
-    {
+    public static Logger getLog(String name) {
         return LoggerFactory.getLogger(name);
     }
 
@@ -68,8 +57,7 @@ public class JDALogger
      *
      * @return Logger for given Class
      */
-    public static Logger getLog(Class<?> clazz)
-    {
+    public static Logger getLog(Class<?> clazz) {
         return LoggerFactory.getLogger(clazz);
     }
 
@@ -81,19 +69,13 @@ public class JDALogger
      *
      * @return An Object that can be passed to SLF4J's logging methods as lazy parameter
      */
-    public static Object getLazyString(LazyEvaluation lazyLambda)
-    {
-        return new Object()
-        {
+    public static Object getLazyString(LazyEvaluation lazyLambda) {
+        return new Object() {
             @Override
-            public String toString()
-            {
-                try
-                {
+            public String toString() {
+                try {
                     return lazyLambda.getString();
-                }
-                catch (Exception ex)
-                {
+                } catch (Exception ex) {
                     StringWriter sw = new StringWriter();
                     ex.printStackTrace(new PrintWriter(sw));
                     return "Error while evaluating lazy String... " + sw;
@@ -106,8 +88,7 @@ public class JDALogger
      * Functional interface used for {@link #getLazyString(LazyEvaluation)} to lazily construct a String.
      */
     @FunctionalInterface
-    public interface LazyEvaluation
-    {
+    public interface LazyEvaluation {
         /**
          * This method is used by {@link #getLazyString(LazyEvaluation)}
          * when SLF4J requests String construction.
@@ -121,4 +102,3 @@ public class JDALogger
         String getString() throws Exception;
     }
 }
-

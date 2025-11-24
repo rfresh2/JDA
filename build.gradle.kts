@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import com.diffplug.spotless.LineEnding
 import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import de.undercouch.gradle.tasks.download.Download
@@ -22,6 +23,7 @@ import nl.littlerobots.vcu.plugin.resolver.VersionSelectors
 import org.apache.tools.ant.filters.ReplaceTokens
 import org.jreleaser.gradle.plugin.tasks.AbstractJReleaserTask
 import org.jreleaser.model.Active
+import org.openrewrite.gradle.AbstractRewriteTask
 
 plugins {
     environment
@@ -34,6 +36,8 @@ plugins {
     alias(libs.plugins.version.catalog.update)
     alias(libs.plugins.jreleaser)
     alias(libs.plugins.download)
+    alias(libs.plugins.spotless)
+    alias(libs.plugins.openrewrite)
 }
 
 
@@ -69,17 +73,31 @@ base {
     archivesName.set("JDA")
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
-}
-
 configure<SourceSetContainer> {
     register("examples") {
         java.srcDir("src/examples/java")
         compileClasspath += sourceSets["main"].output
         runtimeClasspath += sourceSets["main"].output
     }
+}
+
+val testJava21 by sourceSets.creating {
+    java.srcDir("src/test-java21/java")
+    resources.srcDir("src/test-java21/resources")
+    compileClasspath += sourceSets["main"].output
+    runtimeClasspath += sourceSets["main"].output
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(25))
+        vendor.set(JvmVendorSpec.ADOPTIUM)
+    }
+}
+
+val java21Toolchain = javaToolchains.launcherFor {
+    languageVersion.set(JavaLanguageVersion.of(21))
+    vendor.set(JvmVendorSpec.ADOPTIUM)
 }
 
 
@@ -89,7 +107,17 @@ configure<SourceSetContainer> {
 //                                //
 ////////////////////////////////////
 
+val currentJavaVersion = JavaVersion.current().majorVersion
+
 val mockitoAgent by configurations.creating
+
+val testJava21Implementation by configurations.getting {
+    extendsFrom(configurations.implementation.get())
+}
+
+val testJava21RuntimeOnly by configurations.getting {
+    extendsFrom(configurations.runtimeOnly.get())
+}
 
 repositories {
     maven("https://maven.2b2t.vc/releases") {
@@ -153,26 +181,29 @@ dependencies {
     testImplementation(libs.logback.classic)
     testImplementation(libs.archunit)
 
+    testJava21Implementation(libs.bundles.junit)
+    testJava21Implementation(libs.assertj)
+
     mockitoAgent(libs.mockito) {
         isTransitive = false
     }
 
     // OpenRewrite
-    // Import Rewrite's bill of materials.
-    testImplementation(platform("org.openrewrite.recipe:rewrite-recipe-bom:3.6.1"))
+    testImplementation(platform(libs.openrewrite.bom))
+    rewrite(platform(libs.openrewrite.bom))
 
     // rewrite-java dependencies only necessary for Java Recipe development
     testImplementation("org.openrewrite:rewrite-java")
     testImplementation("org.openrewrite.recipe:rewrite-java-dependencies")
 
-    // This is supposed to only be the version that corresponds to the current Java version,
-    // but as there are no toolchain, we include all, they can coexist safely tho.
-    testRuntimeOnly("org.openrewrite:rewrite-java-8")
-    testRuntimeOnly("org.openrewrite:rewrite-java-11")
-    testRuntimeOnly("org.openrewrite:rewrite-java-17")
+    testRuntimeOnly("org.openrewrite:rewrite-java-${currentJavaVersion}")
 
     // For authoring tests for any kind of Recipe
     testImplementation("org.openrewrite:rewrite-test")
+
+    // Needed for rewrite gradle tasks
+    rewrite("org.openrewrite.recipe:rewrite-static-analysis")
+    rewrite("net.dv8tion.jda:formatter-recipes")
 }
 
 fun isNonStable(version: String): Boolean {
@@ -197,6 +228,84 @@ versionCatalogUpdate {
 
 ////////////////////////////////////
 //                                //
+//    Formatting and Linting      //
+//                                //
+////////////////////////////////////
+
+rewrite {
+    failOnDryRunResults = true
+    activeRecipe("org.openrewrite.staticanalysis.NeedBraces")
+    activeRecipe("org.openrewrite.staticanalysis.NoFinalizedLocalVariables")
+    activeRecipe("net.dv8tion.jda.recipe.JavadocFormatter")
+
+    exclusion("*.kts", "**/*.kts", "**/*.kt")
+}
+
+spotless {
+    encoding("UTF-8")
+    lineEndings = LineEnding.GIT_ATTRIBUTES_FAST_ALLSAME
+
+    kotlinGradle {
+        target("*.gradle.kts", "buildSrc/*.gradle.kts", "buildSrc/src/**/*.kt*")
+
+        trimTrailingWhitespace()
+        leadingTabsToSpaces()
+    }
+
+    java {
+        palantirJavaFormat("2.80.0")
+            .formatJavadoc(false)
+
+        licenseHeaderFile("spotless/licence-header.txt")
+
+        target("src/**/*.java")
+
+        removeUnusedImports()
+        importOrder("",  "java", "javax", "\\#")
+        trimTrailingWhitespace()
+    }
+}
+
+tasks.named("spotlessJavaCheck").configure {
+    dependsOn(tasks.named("rewriteDryRun"))
+}
+
+tasks.named("spotlessJavaApply").configure {
+    dependsOn(tasks.named("rewriteRun"))
+}
+
+tasks.register("format") {
+    group = "verification"
+    dependsOn(tasks.named("spotlessApply"))
+    dependsOn(tasks.named("versionCatalogFormat"))
+}
+
+val checkFormat by tasks.registering {
+    group = "verification"
+    dependsOn(tasks.named("spotlessCheck"))
+    dependsOn(tasks.named("rewriteDryRun"))
+}
+
+tasks.named("check").configure {
+    dependsOn(checkFormat)
+}
+
+tasks.named("versionCatalogFormat").configure {
+    val versionCatalogFile = file("$projectDir/gradle/libs.versions.toml")
+
+    inputs.file(versionCatalogFile)
+    outputs.file(versionCatalogFile)
+}
+
+tasks.withType(AbstractRewriteTask::class).configureEach {
+    inputs.files(fileTree("src") {
+        include("**/*.java")
+    })
+    outputs.upToDateWhen { true }
+}
+
+////////////////////////////////////
+//                                //
 //    Build Task Configuration    //
 //                                //
 ////////////////////////////////////
@@ -217,11 +326,11 @@ val sourcesForRelease by tasks.registering(Copy::class) {
         val version = projectEnvironment.version.get()
 
         val tokens = mapOf(
-            "versionMajor" to version.major,
-            "versionMinor" to version.minor,
-            "versionRevision" to version.revision,
-            "versionClassifier" to nullableReplacement(version.classifier),
-            "commitHash" to projectEnvironment.commitHash
+                "versionMajor" to version.major,
+                "versionMinor" to version.minor,
+                "versionRevision" to version.revision,
+                "versionClassifier" to nullableReplacement(version.classifier),
+                "commitHash" to projectEnvironment.commitHash
         )
         // Allow for setting null on some strings without breaking the source
         // for this, we have special tokens marked with "!@...@!" which are replaced to @...@
@@ -283,7 +392,7 @@ val javadoc by tasks.getting(Javadoc::class) {
 
         author()
         tags("incubating:a:Incubating:")
-        links("https://docs.oracle.com/javase/8/docs/api/", "https://takahikokawasaki.github.io/nv-websocket-client/")
+        links("https://docs.oracle.com/en/java/javase/$currentJavaVersion/docs/api/", "https://takahikokawasaki.github.io/nv-websocket-client/")
 
         addBooleanOption("Xdoclint:all,-missing", true)
 
@@ -294,7 +403,7 @@ val javadoc by tasks.getting(Javadoc::class) {
     source = generateJavaSources.get().source
 
     exclude {
-        it.file.absolutePath.contains("internal", ignoreCase=false)
+        it.file.absolutePath.contains("internal", ignoreCase = false)
     }
 }
 
@@ -360,23 +469,35 @@ tasks.register<Test>("updateTestSnapshots") {
     systemProperty("updateSnapshots", "true")
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
     useJUnitPlatform()
     failFast = false
 
-    if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_21)) {
-        jvmArgs = listOf("-javaagent:${mockitoAgent.asPath}")
-    }
-}
+    jvmArgs = listOf("-javaagent:${mockitoAgent.asPath}")
 
-tasks.test {
     testLogging {
-        events("passed", "skipped", "failed")
+        events("failed")
     }
     reports {
         junitXml.required = projectEnvironment.isGithubAction
-        html.required = projectEnvironment.isGithubAction
+        html.required = true
     }
+}
+
+val testJava21Compatibility by tasks.registering(Test::class) {
+    group = "verification"
+
+    useJUnitPlatform()
+    failFast = true
+
+    testClassesDirs = testJava21.output.classesDirs
+    classpath = testJava21.runtimeClasspath
+
+    javaLauncher = java21Toolchain.get()
+}
+
+tasks.named("check").configure {
+    dependsOn(testJava21Compatibility)
 }
 
 val verifyBytecodeVersion by tasks.registering(VerifyBytecodeVersion::class) {

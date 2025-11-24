@@ -27,20 +27,19 @@ import net.dv8tion.jda.internal.entities.channel.mixin.middleman.GuildChannelMix
 import net.dv8tion.jda.internal.requests.restaction.PermissionOverrideActionImpl;
 import net.dv8tion.jda.internal.utils.Checks;
 
-import javax.annotation.Nonnull;
 import java.util.List;
 
-public interface IPermissionContainerMixin<T extends IPermissionContainerMixin<T>> extends
-        IPermissionContainer,
-        IPermissionContainerUnion,
-        GuildChannelMixin<T>
-{
+import javax.annotation.Nonnull;
+
+public interface IPermissionContainerMixin<T extends IPermissionContainerMixin<T>>
+        extends IPermissionContainer, IPermissionContainerUnion, GuildChannelMixin<T> {
     // ---- Default implementations of interface ----
     @Override
-    default PermissionOverride getPermissionOverride(@Nonnull IPermissionHolder permissionHolder)
-    {
+    default PermissionOverride getPermissionOverride(@Nonnull IPermissionHolder permissionHolder) {
         Checks.notNull(permissionHolder, "Permission Holder");
-        Checks.check(permissionHolder.getGuild().equals(getGuild()), "Provided permission holder is not from the same guild as this channel!");
+        Checks.check(
+                permissionHolder.getGuild().equals(getGuild()),
+                "Provided permission holder is not from the same guild as this channel!");
 
         Long2ObjectMap<PermissionOverride> overrides = getPermissionOverrideMap();
         return overrides.get(permissionHolder.getIdLong());
@@ -48,36 +47,34 @@ public interface IPermissionContainerMixin<T extends IPermissionContainerMixin<T
 
     @Nonnull
     @Override
-    default List<PermissionOverride> getPermissionOverrides()
-    {
+    default List<PermissionOverride> getPermissionOverrides() {
         Long2ObjectMap<PermissionOverride> overrides = getPermissionOverrideMap();
         return List.copyOf(overrides.values());
     }
 
     @Nonnull
     @Override
-    default PermissionOverrideAction upsertPermissionOverride(@Nonnull IPermissionHolder permissionHolder)
-    {
+    default PermissionOverrideAction upsertPermissionOverride(@Nonnull IPermissionHolder permissionHolder) {
         checkAttached();
         checkPermission(Permission.MANAGE_PERMISSIONS);
         Checks.notNull(permissionHolder, "PermissionHolder");
-        Checks.check(permissionHolder.getGuild().equals(getGuild()), "Provided permission holder is not from the same guild as this channel!");
+        Checks.check(
+                permissionHolder.getGuild().equals(getGuild()),
+                "Provided permission holder is not from the same guild as this channel!");
 
         PermissionOverride override = getPermissionOverride(permissionHolder);
-        if (override != null)
+        if (override != null) {
             return override.getManager();
+        }
         return new PermissionOverrideActionImpl(getJDA(), this, permissionHolder);
     }
-
 
     // --- Default implementation of parent mixins hooks ----
     @Override
     @Nonnull
-    default IPermissionContainer getPermissionContainer()
-    {
+    default IPermissionContainer getPermissionContainer() {
         return this;
     }
-
 
     // ---- State Accessors ----
     Long2ObjectMap<PermissionOverride> getPermissionOverrideMap();

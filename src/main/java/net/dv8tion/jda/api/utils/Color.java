@@ -1,9 +1,24 @@
+/*
+ * Copyright 2015 Austin Keener, Michael Ritter, Florian Spieß, and the JDA contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package net.dv8tion.jda.api.utils;
 
 import javax.annotation.Nonnull;
 
-public final class Color
-{
+public final class Color {
 
     /** The color white <span style="color: #FFFFFF">\u25A0</span>. Use {@link #DISCORD_WHITE} for embeds. */
     public static final Color WHITE = of(255, 255, 255);
@@ -143,7 +158,7 @@ public final class Color
      * @param blue The blue component of the RGB value.
      */
     @Nonnull
-    public static Color of(final float red, final float green, final float blue) {
+    public static Color of(float red, float green, float blue) {
         return of((int) (red * 255.0F + 0.5F), (int) (green * 255.0F + 0.5F), (int) (blue * 255.0F + 0.5F));
     }
 
@@ -156,12 +171,12 @@ public final class Color
      * @param blue The blue component of the RGB value.
      */
     @Nonnull
-    public static Color of(final int red, final int green, final int blue) {
+    public static Color of(int red, int green, int blue) {
         if ((red & 0xFF) != red || (green & 0xFF) != green || (blue & 0xFF) != blue) {
-            throw new IllegalArgumentException("Illegal RGB arguments" +
-                    " red=0x" + Integer.toHexString(red) +
-                    " green=0x" + Integer.toHexString(green) +
-                    " blue=0x" + Integer.toHexString(blue));
+            throw new IllegalArgumentException("Illegal RGB arguments" + " red=0x"
+                    + Integer.toHexString(red) + " green=0x"
+                    + Integer.toHexString(green) + " blue=0x"
+                    + Integer.toHexString(blue));
         }
 
         return of((red << 16) | (green << 8) | blue);
@@ -174,7 +189,7 @@ public final class Color
      * @param rgb The RGB value.
      */
     @Nonnull
-    public static Color of(final int rgb) {
+    public static Color of(int rgb) {
         return new Color(rgb & 0xFFFFFF);
     }
 
@@ -187,7 +202,7 @@ public final class Color
      *
      * @param rgb The RGB value.
      */
-    private Color(final int rgb) {
+    private Color(int rgb) {
         this.rgb = rgb;
     }
 
@@ -229,14 +244,10 @@ public final class Color
 
     @Override
     public String toString() {
-        return "Color{" +
-                "red=" + getRed() +
-                ", green=" + getGreen() +
-                ", blue=" + getBlue() +
-                '}';
+        return "Color{" + "red=" + getRed() + ", green=" + getGreen() + ", blue=" + getBlue() + '}';
     }
 
-    public boolean equals(final Object obj) {
+    public boolean equals(Object obj) {
         return obj instanceof Color && ((Color) obj).getRGB() == getRGB();
     }
 
@@ -244,4 +255,3 @@ public final class Color
         return getRGB();
     }
 }
-

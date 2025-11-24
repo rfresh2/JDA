@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package net.dv8tion.jda.api.entities;
 
 import net.dv8tion.jda.api.JDA;
@@ -22,6 +23,8 @@ import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
 import net.dv8tion.jda.api.requests.restaction.RoleAction;
 import net.dv8tion.jda.api.utils.Color;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
+
+import java.awt.*;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
@@ -34,16 +37,15 @@ import javax.annotation.Nullable;
  * @see Guild#getRoleById(long)
  * @see Guild#getRolesByName(String, boolean)
  * @see Guild#getRoles()
- *
  * @see JDA#getRoleCache()
  * @see JDA#getRoleById(long)
  * @see JDA#getRolesByName(String, boolean)
  * @see JDA#getRoles()
  */
-public interface Role extends IMentionable, IPermissionHolder, IDetachableEntity, Comparable<Role>
-{
+public interface Role extends IMentionable, IPermissionHolder, IDetachableEntity, Comparable<Role> {
+    // java.awt.Color fills the MSB with FF, we just use 1F to provide better consistency
     /** Used to keep consistency between color values used in the API */
-    int DEFAULT_COLOR_RAW = 0x1FFFFFFF; // java.awt.Color fills the MSB with FF, we just use 1F to provide better consistency
+    int DEFAULT_COLOR_RAW = 0x1F_FFFFFF;
 
     /**
      * The hierarchical position of this {@link net.dv8tion.jda.api.entities.Role Role}
@@ -227,8 +229,7 @@ public interface Role extends IMentionable, IPermissionHolder, IDetachableEntity
      */
     @Nonnull
     @CheckReturnValue
-    default RoleAction createCopy()
-    {
+    default RoleAction createCopy() {
         return createCopy(getGuild());
     }
 
@@ -296,8 +297,6 @@ public interface Role extends IMentionable, IPermissionHolder, IDetachableEntity
      * See {@link net.dv8tion.jda.api.JDABuilder#enableCache(CacheFlag, CacheFlag...) JDABuilder.enableCache(...)}.
      *
      * @return {@link RoleTags}
-     *
-     * @since  4.2.1
      */
     @Nonnull
     RoleTags getTags();
@@ -307,19 +306,14 @@ public interface Role extends IMentionable, IPermissionHolder, IDetachableEntity
      * This icon will be displayed next to the role's name in the members tab and in chat.
      *
      * @return Possibly-null {@link RoleIcon Icon} of this role
-     *
-     * @since  4.3.1
      */
     @Nullable
     RoleIcon getIcon();
 
     /**
      * Tags associated with this role.
-     *
-     * @since  4.2.1
      */
-    interface RoleTags
-    {
+    interface RoleTags {
         /**
          * Whether this role is associated with a bot.
          *
@@ -344,8 +338,7 @@ public interface Role extends IMentionable, IPermissionHolder, IDetachableEntity
          * @see    #isBot()
          */
         @Nullable
-        default String getBotId()
-        {
+        default String getBotId() {
             return isBot() ? Long.toUnsignedString(getBotIdLong()) : null;
         }
 
@@ -381,8 +374,7 @@ public interface Role extends IMentionable, IPermissionHolder, IDetachableEntity
          * @see    #isIntegration()
          */
         @Nullable
-        default String getIntegrationId()
-        {
+        default String getIntegrationId() {
             return isIntegration() ? Long.toUnsignedString(getIntegrationIdLong()) : null;
         }
 
@@ -396,8 +388,7 @@ public interface Role extends IMentionable, IPermissionHolder, IDetachableEntity
          * @see    #getSubscriptionIdLong()
          * @see    #isAvailableForPurchase()
          */
-        default boolean hasSubscriptionListing()
-        {
+        default boolean hasSubscriptionListing() {
             return getSubscriptionIdLong() != 0;
         }
 
@@ -420,8 +411,7 @@ public interface Role extends IMentionable, IPermissionHolder, IDetachableEntity
          * @see    #isAvailableForPurchase()
          */
         @Nullable
-        default String getSubscriptionId()
-        {
+        default String getSubscriptionId() {
             return hasSubscriptionListing() ? Long.toUnsignedString(getSubscriptionIdLong()) : null;
         }
 
