@@ -26,7 +26,6 @@ import net.dv8tion.jda.api.entities.channel.unions.DefaultGuildChannelUnion;
 import net.dv8tion.jda.api.entities.emoji.RichCustomEmoji;
 import net.dv8tion.jda.api.exceptions.MissingEntityInteractionPermissionsException;
 import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
-import net.dv8tion.jda.api.utils.Color;
 import net.dv8tion.jda.internal.JDAImpl;
 import net.dv8tion.jda.internal.entities.channel.mixin.attribute.IInteractionPermissionMixin;
 import net.dv8tion.jda.internal.entities.mixin.MemberMixin;
@@ -179,23 +178,6 @@ public class DetachedMemberImpl implements Member, MemberMixin<DetachedMemberImp
     @Override
     public Set<Role> getUnsortedRoles() {
         throw detachedException();
-    }
-
-    @Override
-    public Color getColor() {
-        int raw = getColorRaw();
-        return raw != Role.DEFAULT_COLOR_RAW ? Color.of(raw) : null;
-    }
-
-    @Override
-    public int getColorRaw() {
-        for (Role r : getRoles()) {
-            int colorRaw = r.getColorRaw();
-            if (colorRaw != Role.DEFAULT_COLOR_RAW) {
-                return colorRaw;
-            }
-        }
-        return Role.DEFAULT_COLOR_RAW;
     }
 
     @Override

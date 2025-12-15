@@ -34,6 +34,7 @@ fastutil-int-sets = { module = "com.github.rfresh2.fastutil.sets:int-sets", vers
 fastutil-long-object-maps = { module = "com.github.rfresh2.fastutil.maps:long-object-maps", version.ref = "fastutil" }
 fastutil-int-object-maps = { module = "com.github.rfresh2.fastutil.maps:int-object-maps", version.ref = "fastutil" }
 fastutil-int-long-maps = { module = "com.github.rfresh2.fastutil.maps:int-long-maps", version.ref = "fastutil" }
+fastutil-long-int-maps = { module = "com.github.rfresh2.fastutil.maps:long-int-maps", version.ref = "fastutil" }
 fastutil-long-long-maps = { module = "com.github.rfresh2.fastutil.maps:long-long-maps", version.ref = "fastutil" }
 fastutil-object-int-maps = { module = "com.github.rfresh2.fastutil.maps:object-int-maps", version.ref = "fastutil" }
 
@@ -50,7 +51,7 @@ junit-java8 = [
     "junit-java8",
     "junit-launcher-java8",
 ]
-fastutil = ["fastutil-long-sets", "fastutil-int-sets", "fastutil-long-object-maps", "fastutil-int-object-maps", "fastutil-int-long-maps", "fastutil-long-long-maps", "fastutil-object-int-maps"]
+fastutil = ["fastutil-long-sets", "fastutil-int-sets", "fastutil-long-object-maps", "fastutil-int-object-maps", "fastutil-int-long-maps", "fastutil-long-long-maps", "fastutil-object-int-maps", "fastutil-long-int-maps"]
 
 [plugins]
 download = "de.undercouch.download:5.6.0"

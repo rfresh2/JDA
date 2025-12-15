@@ -16,11 +16,10 @@
 
 package net.dv8tion.jda.api.events.role.update;
 
+import net.dv8tion.jda.annotations.ReplaceWith;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.utils.Color;
-
-import java.awt.*;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -31,7 +30,11 @@ import javax.annotation.Nullable;
  * <p>Can be used to retrieve the old color.
  *
  * <p>Identifier: {@code color}
+ *
+ * @deprecated Replaced by {@link RoleUpdateColorsEvent}
  */
+@Deprecated
+@ReplaceWith("RoleUpdateColorsEvent")
 public class RoleUpdateColorEvent extends GenericRoleUpdateEvent<Integer> {
     public static final String IDENTIFIER = "color";
 

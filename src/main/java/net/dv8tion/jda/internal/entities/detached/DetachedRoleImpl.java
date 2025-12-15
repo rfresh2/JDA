@@ -20,13 +20,13 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.RoleColors;
 import net.dv8tion.jda.api.entities.RoleIcon;
 import net.dv8tion.jda.api.entities.channel.attribute.IPermissionContainer;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import net.dv8tion.jda.api.exceptions.DetachedEntityException;
 import net.dv8tion.jda.api.managers.RoleManager;
 import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
-import net.dv8tion.jda.api.utils.Color;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import net.dv8tion.jda.api.utils.data.DataObject;
 import net.dv8tion.jda.internal.JDAImpl;
@@ -51,7 +51,11 @@ public class DetachedRoleImpl implements Role, RoleMixin<DetachedRoleImpl> {
     private boolean hoisted;
     private boolean mentionable;
     private long rawPermissions;
-    private int color;
+
+    private int primaryColor;
+    private int secondaryColor = Role.DEFAULT_COLOR_RAW;
+    private int tertiaryColor = Role.DEFAULT_COLOR_RAW;
+
     private int rawPosition;
     private RoleIcon icon;
 
@@ -106,6 +110,12 @@ public class DetachedRoleImpl implements Role, RoleMixin<DetachedRoleImpl> {
 
     @Nonnull
     @Override
+    public RoleColors getColors() {
+        return new RoleColors(this.primaryColor, this.secondaryColor, this.tertiaryColor);
+    }
+
+    @Nonnull
+    @Override
     public EnumSet<Permission> getPermissions() {
         return Permission.getPermissions(rawPermissions);
     }
@@ -126,16 +136,6 @@ public class DetachedRoleImpl implements Role, RoleMixin<DetachedRoleImpl> {
     @Override
     public EnumSet<Permission> getPermissionsExplicit(@Nonnull GuildChannel channel) {
         throw detachedException();
-    }
-
-    @Override
-    public Color getColor() {
-        return color != Role.DEFAULT_COLOR_RAW ? Color.of(color) : null;
-    }
-
-    @Override
-    public int getColorRaw() {
-        return color;
     }
 
     @Override
@@ -254,8 +254,20 @@ public class DetachedRoleImpl implements Role, RoleMixin<DetachedRoleImpl> {
     }
 
     @Override
-    public DetachedRoleImpl setColor(int color) {
-        this.color = color;
+    public DetachedRoleImpl setPrimaryColor(int color) {
+        this.primaryColor = color;
+        return this;
+    }
+
+    @Override
+    public DetachedRoleImpl setSecondaryColor(int color) {
+        this.secondaryColor = color;
+        return this;
+    }
+
+    @Override
+    public DetachedRoleImpl setTertiaryColor(int color) {
+        this.tertiaryColor = color;
         return this;
     }
 
