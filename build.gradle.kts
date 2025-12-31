@@ -18,16 +18,27 @@ import com.diffplug.spotless.LineEnding
 import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import de.undercouch.gradle.tasks.download.Download
-import net.dv8tion.jda.tasks.*
+import net.dv8tion.jda.gradle.Version
+import net.dv8tion.jda.gradle.nullableReplacement
+import net.dv8tion.jda.gradle.plugins.applyAudioExclusions
+import net.dv8tion.jda.gradle.plugins.applyOpusExclusions
+import net.dv8tion.jda.gradle.tasks.VerifyBytecodeVersion
 import nl.littlerobots.vcu.plugin.resolver.VersionSelectors
 import org.apache.tools.ant.filters.ReplaceTokens
+import org.jetbrains.gradle.ext.Gradle as GradleRunConfiguration
+import org.jetbrains.gradle.ext.JUnit as JUnitRunConfiguration
+import org.jetbrains.gradle.ext.copyright
+import org.jetbrains.gradle.ext.runConfigurations
+import org.jetbrains.gradle.ext.settings
 import org.jreleaser.gradle.plugin.tasks.AbstractJReleaserTask
 import org.jreleaser.model.Active
 import org.openrewrite.gradle.AbstractRewriteTask
 
 plugins {
-    environment
     artifacts
+    environment
+    idea
+    `model-generator`
     `java-library`
     `maven-publish`
 
@@ -35,9 +46,9 @@ plugins {
     alias(libs.plugins.versions)
     alias(libs.plugins.version.catalog.update)
     alias(libs.plugins.jreleaser)
-    alias(libs.plugins.download)
     alias(libs.plugins.spotless)
     alias(libs.plugins.openrewrite)
+    alias(libs.plugins.ideax)
 }
 
 
@@ -54,6 +65,56 @@ projectEnvironment {
 artifactFilters {
     opusExclusions.addAll("natives/**", "com/sun/jna/**", "club/minnced/opus/util/*", "tomp2p/opuswrapper/*")
     additionalAudioExclusions.addAll("com/google/crypto/tink/**", "com/google/gson/**", "com/google/protobuf/**", "google/protobuf/**")
+}
+
+apiModelGenerator {
+    outputDirectory = layout.buildDirectory.dir("generated/rest-api-models")
+    apiSpecFile = file("discord-rest-openapi.json")
+    apiSpecDownloadUrl = "https://raw.githubusercontent.com/discord/discord-api-spec/refs/heads/main/specs/openapi.json"
+
+    generatorSuffix = "Dto"
+    includes = listOf(
+        "AvailableLocalesEnum",
+        "CreateRoleRequest",
+        "MessageType",
+        "ChannelTypes",
+        "AuditLogActionTypes",
+        "InviteTypes",
+        "WebhookTypes",
+    )
+}
+
+idea {
+    project {
+        settings {
+            copyright {
+                val jdaCopyrightProfileName = "JDA"
+
+                useDefault = jdaCopyrightProfileName
+
+                profiles.create(jdaCopyrightProfileName) {
+                    notice = file("gradle/copyright-header.txt").readText(Charsets.UTF_8)
+                }
+            }
+
+            runConfigurations {
+                defaults(JUnitRunConfiguration::class.java) {
+                    vmParameters = listOf(
+                            "-ea",
+                            "-Duser.timezone=GMT",
+                            "-Duser.language=en",
+                            "-Duser.country=US",
+                            "-Dfile.encoding=utf-8",
+                            "-DupdateSnapshots",
+                    ).joinToString(" ")
+                }
+
+                register<GradleRunConfiguration>("format") {
+                    taskNames = listOf("format")
+                }
+            }
+        }
+    }
 }
 
 // Use normal version string for new releases and commitHash for other builds
@@ -257,14 +318,19 @@ spotless {
 
     java {
         palantirJavaFormat("2.80.0")
-            .formatJavadoc(false)
+                .formatJavadoc(false)
 
-        licenseHeaderFile("spotless/licence-header.txt")
+        val copyrightHeader = file("gradle/copyright-header.txt")
+                .readText(Charsets.UTF_8)
+                .trim()
+                .prependIndent(" * ")
+
+        licenseHeader("/*\n$copyrightHeader\n */\n\n")
 
         target("src/**/*.java")
 
         removeUnusedImports()
-        importOrder("",  "java", "javax", "\\#")
+        importOrder("", "java", "javax", "\\#")
         trimTrailingWhitespace()
     }
 }
@@ -513,6 +579,15 @@ val verifyBytecodeVersion by tasks.registering(VerifyBytecodeVersion::class) {
 }
 
 //compileJava.finalizedBy(verifyBytecodeVersion)
+
+tasks.withType<Test>().configureEach {
+    systemProperties.putAll(mapOf(
+            "user.timezone" to "GMT",
+            "user.language" to "en",
+            "user.country" to "US",
+            "file.encoding" to "utf-8",
+    ))
+}
 
 
 ////////////////////////////////////
