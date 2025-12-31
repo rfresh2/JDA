@@ -16,7 +16,6 @@
 
 package net.dv8tion.jda.api.utils.data;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import net.dv8tion.jda.api.exceptions.DataObjectParsingException;
 import net.dv8tion.jda.api.exceptions.ParsingException;
 import net.dv8tion.jda.api.utils.MiscUtil;
@@ -28,6 +27,7 @@ import net.dv8tion.jda.internal.utils.SerializationUtil;
 import org.jetbrains.annotations.Contract;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.core.JacksonException;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -751,7 +751,7 @@ public class DataObject implements SerializableData {
     public String toShallowString() {
         try {
             return SerializationUtil.toShallowJsonString(this.data);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new ParsingException(e);
         }
     }

@@ -16,16 +16,14 @@
 
 package net.dv8tion.jda.internal.generated;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.JsonToken;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.ValueDeserializer;
 
-import java.io.IOException;
-
-class MaybeNullDeserializer extends JsonDeserializer<MaybeNull<?>> {
+class MaybeNullDeserializer extends ValueDeserializer<MaybeNull<?>> {
     @Override
-    public MaybeNull<?> deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+    public MaybeNull<?> deserialize(JsonParser p, DeserializationContext ctxt) {
         if (p.currentToken() == JsonToken.VALUE_NULL) {
             return new MaybeNull<>(null);
         }

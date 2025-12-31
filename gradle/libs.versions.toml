@@ -1,15 +1,24 @@
 [versions]
-jackson = "2.20.1"
 fastutil = "8.5.16"
+jackson = "3.0.3"
 
 [libraries]
 archunit = "com.tngtech.archunit:archunit:1.4.1"
 assertj = "org.assertj:assertj-core:3.27.6"
 commons-collections = "org.apache.commons:commons-collections4:4.5.0"
 commons-lang3 = "org.apache.commons:commons-lang3:3.19.0"
+eventbus = "com.github.rfresh2:SimpleEventBus:1.6"
+fastutil-int-long-maps = { module = "com.github.rfresh2.fastutil.maps:int-long-maps", version.ref = "fastutil" }
+fastutil-int-object-maps = { module = "com.github.rfresh2.fastutil.maps:int-object-maps", version.ref = "fastutil" }
+fastutil-int-sets = { module = "com.github.rfresh2.fastutil.sets:int-sets", version.ref = "fastutil" }
+fastutil-long-int-maps = { module = "com.github.rfresh2.fastutil.maps:long-int-maps", version.ref = "fastutil" }
+fastutil-long-long-maps = { module = "com.github.rfresh2.fastutil.maps:long-long-maps", version.ref = "fastutil" }
+fastutil-long-object-maps = { module = "com.github.rfresh2.fastutil.maps:long-object-maps", version.ref = "fastutil" }
+fastutil-long-sets = { module = "com.github.rfresh2.fastutil.sets:long-sets", version.ref = "fastutil" }
+fastutil-object-int-maps = { module = "com.github.rfresh2.fastutil.maps:object-int-maps", version.ref = "fastutil" }
 findbugs = "com.google.code.findbugs:jsr305:3.0.2"
-jackson-core = { module = "com.fasterxml.jackson.core:jackson-core", version.ref = "jackson" }
-jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
+jackson-bom = { module = "tools.jackson:jackson-bom", version.ref = "jackson" }
+jackson-databind = { module = "tools.jackson.core:jackson-databind" }
 jetbrains-annotations = "org.jetbrains:annotations:26.0.2-1"
 jna = "net.java.dev.jna:jna:5.18.1"
 junit = "org.junit.jupiter:junit-jupiter:6.0.1"
@@ -28,19 +37,19 @@ slf4j = "org.slf4j:slf4j-api:2.0.17"
 # @pin Newer versions require java 11 or higher
 tink = "com.google.crypto.tink:tink:1.18.0"
 websocket-client = "com.neovisionaries:nv-websocket-client:2.14"
-eventbus = { module = "com.github.rfresh2:SimpleEventBus", version = "1.6" }
-fastutil-long-sets = { module = "com.github.rfresh2.fastutil.sets:long-sets", version.ref = "fastutil" }
-fastutil-int-sets = { module = "com.github.rfresh2.fastutil.sets:int-sets", version.ref = "fastutil" }
-fastutil-long-object-maps = { module = "com.github.rfresh2.fastutil.maps:long-object-maps", version.ref = "fastutil" }
-fastutil-int-object-maps = { module = "com.github.rfresh2.fastutil.maps:int-object-maps", version.ref = "fastutil" }
-fastutil-int-long-maps = { module = "com.github.rfresh2.fastutil.maps:int-long-maps", version.ref = "fastutil" }
-fastutil-long-int-maps = { module = "com.github.rfresh2.fastutil.maps:long-int-maps", version.ref = "fastutil" }
-fastutil-long-long-maps = { module = "com.github.rfresh2.fastutil.maps:long-long-maps", version.ref = "fastutil" }
-fastutil-object-int-maps = { module = "com.github.rfresh2.fastutil.maps:object-int-maps", version.ref = "fastutil" }
 
 [bundles]
+fastutil = [
+    "fastutil-int-long-maps",
+    "fastutil-int-object-maps",
+    "fastutil-int-sets",
+    "fastutil-long-int-maps",
+    "fastutil-long-long-maps",
+    "fastutil-long-object-maps",
+    "fastutil-long-sets",
+    "fastutil-object-int-maps",
+]
 jackson = [
-    "jackson-core",
     "jackson-databind",
 ]
 junit = [
@@ -51,7 +60,6 @@ junit-java8 = [
     "junit-java8",
     "junit-launcher-java8",
 ]
-fastutil = ["fastutil-long-sets", "fastutil-int-sets", "fastutil-long-object-maps", "fastutil-int-object-maps", "fastutil-int-long-maps", "fastutil-long-long-maps", "fastutil-object-int-maps", "fastutil-long-int-maps"]
 
 [plugins]
 download = "de.undercouch.download:5.6.0"

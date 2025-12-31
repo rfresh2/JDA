@@ -16,12 +16,12 @@
 
 package net.dv8tion.jda.internal.utils.requestbody;
 
-import com.fasterxml.jackson.databind.ObjectWriter;
 import net.dv8tion.jda.internal.requests.Requester;
 import net.dv8tion.jda.internal.utils.SerializationUtil;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import okio.BufferedSink;
+import tools.jackson.databind.ObjectWriter;
 
 import java.io.IOException;
 

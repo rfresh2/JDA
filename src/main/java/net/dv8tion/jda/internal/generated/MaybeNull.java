@@ -16,9 +16,9 @@
 
 package net.dv8tion.jda.internal.generated;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import net.dv8tion.jda.internal.utils.EntityString;
+import tools.jackson.databind.annotation.JsonDeserialize;
+import tools.jackson.databind.annotation.JsonSerialize;
 
 import java.util.Objects;
 

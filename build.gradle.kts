@@ -218,6 +218,7 @@ dependencies {
     /* Internal dependencies */
 
     //General Utility
+    implementation(platform(libs.jackson.bom))
     implementation(libs.bundles.jackson)
 
     implementation(libs.bundles.fastutil)

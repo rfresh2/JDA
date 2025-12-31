@@ -16,19 +16,18 @@
 
 package net.dv8tion.jda.internal.utils;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.*;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.type.CollectionType;
-import com.fasterxml.jackson.databind.type.MapType;
 import net.dv8tion.jda.api.exceptions.ParsingException;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.*;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.module.SimpleModule;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.type.CollectionType;
+import tools.jackson.databind.type.MapType;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
-import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -41,16 +40,15 @@ public class SerializationUtil {
     private static final String TRUNCATED_OBJECT = "{…truncated object…}";
 
     private static final ObjectMapper mapper;
-    private static final SimpleModule module;
     private static final MapType mapType;
     private static final CollectionType listType;
 
     static {
-        mapper = new ObjectMapper();
-        module = new SimpleModule();
-        module.addAbstractTypeMapping(Map.class, HashMap.class);
-        module.addAbstractTypeMapping(List.class, ArrayList.class);
-        mapper.registerModule(module);
+        mapper = JsonMapper.builder()
+                .addModule(new SimpleModule()
+                        .addAbstractTypeMapping(Map.class, HashMap.class)
+                        .addAbstractTypeMapping(List.class, ArrayList.class))
+                .build();
         mapType = mapper.getTypeFactory().constructMapType(HashMap.class, String.class, Object.class);
         listType = mapper.getTypeFactory().constructRawCollectionType(ArrayList.class);
     }
@@ -70,7 +68,7 @@ public class SerializationUtil {
         Checks.notNull(data, "Data");
         try {
             return mapper.writeValueAsBytes(data);
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             throw new ParsingException(ex);
         }
     }
@@ -78,13 +76,8 @@ public class SerializationUtil {
     @Nonnull
     public static String toJsonString(@Nonnull Object data, boolean pretty) {
         Checks.notNull(data, "Data");
-
-        try {
-            ObjectWriter writer = getObjectWriter(pretty);
-            return writer.writeValueAsString(data);
-        } catch (IOException ex) {
-            throw new UncheckedIOException(ex);
-        }
+        ObjectWriter writer = getObjectWriter(pretty);
+        return writer.writeValueAsString(data);
     }
 
     @Nonnull
@@ -109,7 +102,7 @@ public class SerializationUtil {
 
         try {
             return mapper.readValue(data, type);
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             throw new ParsingException(ex);
         }
     }
@@ -121,7 +114,7 @@ public class SerializationUtil {
 
         try {
             return mapper.readValue(data, type);
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             throw new ParsingException(ex);
         }
     }
@@ -133,7 +126,7 @@ public class SerializationUtil {
 
         try {
             return mapper.readValue(data, type);
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             throw new ParsingException(ex);
         }
     }
@@ -145,13 +138,13 @@ public class SerializationUtil {
 
         try {
             return mapper.readValue(data, type);
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             throw new ParsingException(ex);
         }
     }
 
     @Nonnull
-    public static String toShallowJsonString(@Nonnull Object object) throws JsonProcessingException {
+    public static String toShallowJsonString(@Nonnull Object object) throws JacksonException {
         JsonNode root = mapper.valueToTree(object);
         JsonNode shallowRoot = pruneOneLevel(root);
         return mapper.writer()
@@ -175,7 +168,7 @@ public class SerializationUtil {
             return out;
         } else if (n.isArray()) {
             ArrayNode out = mapper.createArrayNode();
-            n.values().forEachRemaining(v -> {
+            n.values().forEach(v -> {
                 if (v.isValueNode()) {
                     out.add(v);
                 } else if (v.isArray()) {

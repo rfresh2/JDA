@@ -16,7 +16,6 @@
 
 package net.dv8tion.jda.api.utils.data;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import net.dv8tion.jda.api.exceptions.DataArrayParsingException;
 import net.dv8tion.jda.api.exceptions.ParsingException;
 import net.dv8tion.jda.api.utils.data.etf.ExTermDecoder;
@@ -27,6 +26,7 @@ import net.dv8tion.jda.internal.utils.SerializationUtil;
 import org.jetbrains.annotations.Contract;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.core.JacksonException;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -693,7 +693,7 @@ public class DataArray implements Iterable<Object>, SerializableArray {
     public String toShallowString() {
         try {
             return SerializationUtil.toShallowJsonString(this.data);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new ParsingException(e);
         }
     }
