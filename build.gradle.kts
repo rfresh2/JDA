@@ -487,9 +487,20 @@ tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
     options.isIncremental = true
 
-    val args = mutableListOf("-Xlint:deprecation", "-Xlint:unchecked")
+    options.compilerArgs.addAll(listOf(
+            "-Xlint:all",
+            // warnings for --release 8
+            "-Xlint:-options",
+            // warnings for missing serialVersionUID in exceptions (we don't intend for exceptions to be serialized)
+            "-Xlint:-serial",
+            // warnings for calling member methods in constructor, which we do for argument checks
+            "-Xlint:-this-escape",
+            // warnings for unused resource in try-with-resources (we use them for locks)
+            "-Xlint:-try",
+            // warnings for potentially unsafe varargs, this is already handled by @SafeVarargs
+            "-Xlint:-varargs",
+    ))
     options.release = 21
-    options.compilerArgs.addAll(args)
 }
 
 val compileJava by tasks.getting(JavaCompile::class) {
@@ -543,7 +554,11 @@ tasks.test {
     useJUnitPlatform()
     failFast = false
 
-    jvmArgs = listOf("-javaagent:${mockitoAgent.asPath}")
+    jvmArgs = listOf(
+        "-javaagent:${mockitoAgent.asPath}",
+        // https://github.com/raphw/byte-buddy/issues/1803
+        "-Dnet.bytebuddy.safe=true"
+    )
 
     testLogging {
         events("failed")
