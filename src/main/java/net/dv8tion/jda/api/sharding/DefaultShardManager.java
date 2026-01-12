@@ -19,6 +19,7 @@ package net.dv8tion.jda.api.sharding;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.OnlineStatus;
+import net.dv8tion.jda.api.audio.AudioModuleConfig;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.SelfUser;
@@ -151,12 +152,15 @@ public class DefaultShardManager implements ShardManager {
 
     protected final IntFunction<? extends RestConfig> restConfigProvider;
 
+    @Nullable
+    protected final AudioModuleConfig audioModuleConfig;
+
     public DefaultShardManager(@Nonnull String token) {
         this(token, null);
     }
 
     public DefaultShardManager(@Nonnull String token, @Nullable Collection<Integer> shardIds) {
-        this(token, shardIds, null, null, null, null, null, null, null, null);
+        this(token, shardIds, null, null, null, null, null, null, null, null, null);
     }
 
     public DefaultShardManager(
@@ -169,6 +173,7 @@ public class DefaultShardManager implements ShardManager {
             @Nullable ShardingSessionConfig sessionConfig,
             @Nullable ShardingMetaConfig metaConfig,
             @Nullable IntFunction<? extends RestConfig> restConfigProvider,
+            @Nullable AudioModuleConfig audioModuleConfig,
             @Nullable ChunkingFilter chunkingFilter) {
         this.token = token;
         this.eventConfig = eventConfig == null ? EventConfig.getDefault() : eventConfig;
@@ -179,6 +184,7 @@ public class DefaultShardManager implements ShardManager {
         this.metaConfig = metaConfig == null ? ShardingMetaConfig.getDefault() : metaConfig;
         this.chunkingFilter = chunkingFilter == null ? ChunkingFilter.ALL : chunkingFilter;
         this.restConfigProvider = restConfigProvider == null ? (i) -> new RestConfig() : restConfigProvider;
+        this.audioModuleConfig = audioModuleConfig;
         this.executor = createExecutor(this.threadingConfig.getThreadFactory());
         this.shutdownHook =
                 this.metaConfig.isUseShutdownHook() ? new Thread(this::shutdown, "JDA Shutdown Hook") : null;
@@ -511,7 +517,8 @@ public class DefaultShardManager implements ShardManager {
             restConfig = new RestConfig();
         }
 
-        JDAImpl jda = new JDAImpl(authConfig, sessionConfig, threadingConfig, metaConfig, restConfig);
+        JDAImpl jda =
+                new JDAImpl(authConfig, sessionConfig, threadingConfig, metaConfig, restConfig, audioModuleConfig);
         jda.setMemberCachePolicy(shardingConfig.getMemberCachePolicy());
         threadingConfig.init(jda::getIdentifierString);
         jda.initRequester();
@@ -527,10 +534,6 @@ public class DefaultShardManager implements ShardManager {
 
         if (eventConfig.getEventManagerProvider() != null) {
             jda.setEventManager(this.eventConfig.getEventManagerProvider().apply(shardId));
-        }
-
-        if (this.sessionConfig.getAudioSendFactory() != null) {
-            jda.setAudioSendFactory(this.sessionConfig.getAudioSendFactory());
         }
 
         jda.addEventListener(this.eventConfig.getListeners().toArray());

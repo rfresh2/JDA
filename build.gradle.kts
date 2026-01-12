@@ -59,7 +59,7 @@ plugins {
 ////////////////////////////////////
 
 projectEnvironment {
-    version = Version(major = "6", minor = "2", revision = System.getenv("PUBLISH_VERSION") ?: "0", classifier = null)
+    version = Version(major = "6", minor = "3", revision = System.getenv("PUBLISH_VERSION") ?: "0", classifier = null)
 }
 
 artifactFilters {
@@ -126,20 +126,16 @@ idea {
 
 project.version = projectEnvironment.version.get().toString()
 
-val javaVersion = JavaVersion.current()
-
 project.group = "com.github.rfresh2"
 
 base {
     archivesName.set("JDA")
 }
 
-configure<SourceSetContainer> {
-    register("examples") {
-        java.srcDir("src/examples/java")
-        compileClasspath += sourceSets["main"].output
-        runtimeClasspath += sourceSets["main"].output
-    }
+val examples by sourceSets.creating {
+    java.srcDir("src/examples/java")
+    compileClasspath += sourceSets["main"].output
+    runtimeClasspath += sourceSets["main"].output
 }
 
 val testJava21 by sourceSets.creating {
@@ -152,7 +148,6 @@ val testJava21 by sourceSets.creating {
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(25))
-        vendor.set(JvmVendorSpec.ADOPTIUM)
     }
 }
 
@@ -178,6 +173,10 @@ val testJava21Implementation by configurations.getting {
 
 val testJava21RuntimeOnly by configurations.getting {
     extendsFrom(configurations.runtimeOnly.get())
+}
+
+val examplesImplementation by configurations.getting {
+    extendsFrom(configurations.implementation.get())
 }
 
 repositories {
@@ -234,6 +233,8 @@ dependencies {
         addAll(configurations["implementation"].allDependencies)
         addAll(configurations["compileOnly"].allDependencies)
     }
+
+    examplesImplementation(libs.jdave)
 
     testImplementation(libs.bundles.junit)
     testImplementation(libs.reflections)
@@ -459,11 +460,15 @@ val javadoc by tasks.getting(Javadoc::class) {
     (options as? StandardJavadocDocletOptions)?.apply {
         memberLevel = JavadocMemberLevel.PUBLIC
         encoding = "UTF-8"
+        locale = "en_US"
 
         author()
         tags("incubating:a:Incubating:")
         links("https://docs.oracle.com/en/java/javase/$currentJavaVersion/docs/api/", "https://takahikokawasaki.github.io/nv-websocket-client/")
 
+        addStringOption("-link-modularity-mismatch", "info")
+        addStringOption("-release", "21")
+        addBooleanOption("-syntax-highlight", true)
         addBooleanOption("Xdoclint:all,-missing", true)
 
         overview = "$projectDir/overview.html"
@@ -500,12 +505,17 @@ tasks.withType<JavaCompile> {
             // warnings for potentially unsafe varargs, this is already handled by @SafeVarargs
             "-Xlint:-varargs",
     ))
-    options.release = 21
 }
 
 val compileJava by tasks.getting(JavaCompile::class) {
     dependsOn(generateJavaSources)
     source = generateJavaSources.get().source
+
+    options.release = 21
+}
+
+tasks.named<JavaCompile>("compileTestJava21Java") {
+    options.release = 21
 }
 
 tasks.build.configure {
