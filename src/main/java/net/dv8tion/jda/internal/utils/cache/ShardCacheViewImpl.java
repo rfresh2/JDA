@@ -150,7 +150,7 @@ public class ShardCacheViewImpl extends ReadWriteLockCache<JDA> implements Shard
         }
 
         try (UnlockHook hook = readLock()) {
-            List<JDA> list = new LinkedList<>();
+            List<JDA> list = new ArrayList<>();
             for (JDA elem : elements.values()) {
                 String elementName = elem.getShardInfo().getShardString();
                 if (elementName != null) {

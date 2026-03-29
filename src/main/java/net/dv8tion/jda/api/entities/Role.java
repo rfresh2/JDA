@@ -184,6 +184,7 @@ public interface Role extends IMentionable, IPermissionHolder, IDetachableEntity
      *
      * @return the Guild containing this Role
      */
+    @Override
     @Nonnull
     Guild getGuild();
 

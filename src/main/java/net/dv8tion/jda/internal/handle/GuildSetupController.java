@@ -264,6 +264,7 @@ public class GuildSetupController {
         timeoutHandle = null;
     }
 
+    @SuppressWarnings("ReferenceEquality")
     public boolean containsMember(long userId, @Nullable GuildSetupNode excludedNode) {
         for (var node : setupNodes.values()) {
             if (node != excludedNode && node.containsMember(userId)) {

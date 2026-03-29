@@ -43,7 +43,10 @@ import javax.annotation.Nullable;
 public class GuildSetupNode {
     private final long id;
     private final GuildSetupController controller;
+
+    @SuppressWarnings("JdkObsolete")
     private final List<DataObject> cachedEvents = new LinkedList<>();
+
     private Long2ObjectMap<DataObject> members;
     private LongSet removedMembers;
     private DataObject partialGuild;
@@ -178,7 +181,6 @@ public class GuildSetupNode {
             }
         }
         boolean unavailable = partialGuild.getBoolean("unavailable");
-        boolean wasMarkedUnavailable = this.markedUnavailable;
         this.markedUnavailable = unavailable;
         if (unavailable) {
             if (!firedUnavailableJoin && isJoin()) {
