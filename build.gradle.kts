@@ -60,6 +60,9 @@ plugins {
 //                                //
 ////////////////////////////////////
 
+val exampleJavaVersion = JavaLanguageVersion.of(25)
+val libraryJavaVersion = JavaLanguageVersion.of(21)
+
 projectEnvironment {
     version = Version(major = "6", minor = "4", revision = System.getenv("PUBLISH_VERSION") ?: "0", classifier = null)
 }
@@ -149,12 +152,12 @@ val testJava21 by sourceSets.creating {
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(25))
+        languageVersion.set(exampleJavaVersion)
     }
 }
 
 val java21Toolchain = javaToolchains.launcherFor {
-    languageVersion.set(JavaLanguageVersion.of(21))
+    languageVersion.set(libraryJavaVersion)
     vendor.set(JvmVendorSpec.ADOPTIUM)
 }
 
@@ -228,13 +231,6 @@ dependencies {
     implementation(libs.tink)
 
     implementation(libs.eventbus)
-
-    //Sets the dependencies for the examples
-    configurations["examplesImplementation"].withDependencies {
-        addAll(configurations["api"].allDependencies)
-        addAll(configurations["implementation"].allDependencies)
-        addAll(configurations["compileOnly"].allDependencies)
-    }
 
     examplesImplementation(libs.jdave)
 
@@ -486,7 +482,7 @@ val javadoc by tasks.getting(Javadoc::class) {
         links("https://docs.oracle.com/en/java/javase/$currentJavaVersion/docs/api/", "https://takahikokawasaki.github.io/nv-websocket-client/")
 
         addStringOption("-link-modularity-mismatch", "info")
-        addStringOption("-release", "21")
+        addStringOption("-release", libraryJavaVersion.asInt().toString())
         addBooleanOption("-syntax-highlight", true)
         addBooleanOption("Xdoclint:all,-missing", true)
 
@@ -556,11 +552,11 @@ val compileJava by tasks.getting(JavaCompile::class) {
     dependsOn(generateJavaSources)
     source = generateJavaSources.get().source
 
-    options.release = 21
+    options.release = libraryJavaVersion.asInt()
 }
 
 tasks.named<JavaCompile>("compileTestJava21Java") {
-    options.release = 21
+    options.release = libraryJavaVersion.asInt()
 }
 
 tasks.named<JavaCompile>("compileExamplesJava") {
