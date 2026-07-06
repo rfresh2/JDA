@@ -23,7 +23,7 @@ jobs:
             - name: Setup Gradle
               uses: gradle/actions/setup-gradle@v5
               with:
-                dependency-graph: generate-and-submit
+                  dependency-graph: generate-and-submit
 
             - name: Build JDA
               run: ./gradlew build test

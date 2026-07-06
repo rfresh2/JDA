@@ -31,8 +31,6 @@ import org.jetbrains.gradle.ext.JUnit as JUnitRunConfiguration
 import org.jetbrains.gradle.ext.copyright
 import org.jetbrains.gradle.ext.runConfigurations
 import org.jetbrains.gradle.ext.settings
-import org.jreleaser.gradle.plugin.tasks.AbstractJReleaserTask
-import org.jreleaser.model.Active
 import org.openrewrite.gradle.AbstractRewriteTask
 
 plugins {
@@ -42,15 +40,17 @@ plugins {
     `model-generator`
     `java-library`
     `maven-publish`
+    signing
 
     alias(libs.plugins.shadow)
     alias(libs.plugins.versions)
     alias(libs.plugins.version.catalog.update)
-    alias(libs.plugins.jreleaser)
     alias(libs.plugins.spotless)
     alias(libs.plugins.errorprone)
     alias(libs.plugins.openrewrite)
     alias(libs.plugins.ideax)
+    alias(libs.plugins.nmcp)
+    alias(libs.plugins.nmcp.aggregation)
 }
 
 
@@ -64,7 +64,7 @@ val exampleJavaVersion = JavaLanguageVersion.of(25)
 val libraryJavaVersion = JavaLanguageVersion.of(21)
 
 projectEnvironment {
-    version = Version(major = "6", minor = "4", revision = System.getenv("PUBLISH_VERSION") ?: "0", classifier = null)
+    version = Version(major = "6", minor = "5", revision = System.getenv("PUBLISH_VERSION") ?: "0", classifier = null)
 }
 
 artifactFilters {
@@ -137,13 +137,13 @@ base {
     archivesName.set("JDA")
 }
 
-val examples by sourceSets.creating {
+val examples = sourceSets.create("examples") {
     java.srcDir("src/examples/java")
     compileClasspath += sourceSets["main"].output
     runtimeClasspath += sourceSets["main"].output
 }
 
-val testJava21 by sourceSets.creating {
+val testJava21 = sourceSets.create("testJava21") {
     java.srcDir("src/test-java21/java")
     resources.srcDir("src/test-java21/resources")
     compileClasspath += sourceSets["main"].output
@@ -170,17 +170,17 @@ val java21Toolchain = javaToolchains.launcherFor {
 
 val currentJavaVersion = JavaVersion.current().majorVersion
 
-val mockitoAgent by configurations.creating
+val mockitoAgent = configurations.create("mockitoAgent")
 
-val testJava21Implementation by configurations.getting {
+val testJava21Implementation = configurations.getByName("testJava21Implementation") {
     extendsFrom(configurations.implementation.get())
 }
 
-val testJava21RuntimeOnly by configurations.getting {
+val testJava21RuntimeOnly = configurations.getByName("testJava21RuntimeOnly") {
     extendsFrom(configurations.runtimeOnly.get())
 }
 
-val examplesImplementation by configurations.getting {
+val examplesImplementation = configurations.getByName("examplesImplementation") {
     extendsFrom(configurations.implementation.get())
 }
 
@@ -268,6 +268,9 @@ dependencies {
 
     // Linting & Formatting
     errorprone(libs.errorprone.core)
+
+    // Publishing
+    nmcpAggregation(rootProject)
 }
 
 fun isNonStable(version: String): Boolean {
@@ -346,7 +349,7 @@ tasks.named("spotlessJavaApply").configure {
     dependsOn(tasks.named("rewriteRun"))
 }
 
-val enableErrorpronePatching by tasks.registering {
+val enableErrorpronePatching = tasks.register("enableErrorpronePatching") {
     group = "verification"
 
     doFirst {
@@ -366,7 +369,7 @@ tasks.register("format") {
     dependsOn(tasks.named("versionCatalogFormat"))
 }
 
-val checkFormat by tasks.registering {
+val checkFormat = tasks.register("checkFormat") {
     group = "verification"
     dependsOn(tasks.named("spotlessCheck"))
     dependsOn(tasks.named("rewriteDryRun"))
@@ -396,17 +399,17 @@ tasks.withType(AbstractRewriteTask::class).configureEach {
 //                                //
 ////////////////////////////////////
 
-val jar by tasks.getting(Jar::class) {
+val jar = tasks.getByName<Jar>("jar") {
     archiveBaseName.set(project.name)
     manifest.attributes("Implementation-Version" to project.version, "Automatic-Module-Name" to "net.dv8tion.jda")
 }
 
-val shadowJar by tasks.getting(ShadowJar::class) {
+val shadowJar = tasks.getByName<ShadowJar>("shadowJar") {
     archiveClassifier.set("withDependencies")
     exclude("*.pom")
 }
 
-val sourcesForRelease by tasks.registering(Copy::class) {
+val sourcesForRelease = tasks.register<Copy>("sourcesForRelease") {
     from("src/main/java") {
         include("**/JDAInfo.java")
         val version = projectEnvironment.version.get()
@@ -429,7 +432,7 @@ val sourcesForRelease by tasks.registering(Copy::class) {
     includeEmptyDirs = false
 }
 
-val generateJavaSources by tasks.registering(SourceTask::class) {
+val generateJavaSources = tasks.register<SourceTask>("generateJavaSources") {
     val javaSources = sourceSets["main"].allJava.filter {
         it.name != "JDAInfo.java"
     }.asFileTree
@@ -438,7 +441,7 @@ val generateJavaSources by tasks.registering(SourceTask::class) {
     dependsOn(sourcesForRelease)
 }
 
-val noOpusJar by tasks.registering(ShadowJar::class) {
+val noOpusJar = tasks.register<ShadowJar>("noOpusJar") {
     dependsOn(shadowJar)
     archiveClassifier.set(shadowJar.archiveClassifier.get() + "-no-opus")
 
@@ -448,7 +451,7 @@ val noOpusJar by tasks.registering(ShadowJar::class) {
     manifest.from(jar.manifest)
 }
 
-val minimalJar by tasks.registering(ShadowJar::class) {
+val minimalJar = tasks.register<ShadowJar>("minimalJar") {
     dependsOn(shadowJar)
     minimize()
     archiveClassifier.set(shadowJar.archiveClassifier.get() + "-min")
@@ -459,7 +462,7 @@ val minimalJar by tasks.registering(ShadowJar::class) {
     manifest.from(jar.manifest)
 }
 
-val sourcesJar by tasks.registering(Jar::class) {
+val sourcesJar = tasks.register<Jar>("sourcesJar") {
     archiveClassifier.set("sources")
     from("src/main/java") {
         exclude("**/JDAInfo.java")
@@ -469,7 +472,7 @@ val sourcesJar by tasks.registering(Jar::class) {
     dependsOn(sourcesForRelease)
 }
 
-val javadoc by tasks.getting(Javadoc::class) {
+val javadoc = tasks.getByName<Javadoc>("javadoc") {
     isFailOnError = projectEnvironment.isGithubAction
 
     (options as? StandardJavadocDocletOptions)?.apply {
@@ -497,7 +500,7 @@ val javadoc by tasks.getting(Javadoc::class) {
     }
 }
 
-val javadocJar by tasks.registering(Jar::class) {
+val javadocJar = tasks.register<Jar>("javadocJar") {
     dependsOn(javadoc)
     archiveClassifier.set("javadoc")
     from(javadoc.destinationDir)
@@ -548,7 +551,7 @@ tasks.withType<JavaCompile>().configureEach {
     mustRunAfter(enableErrorpronePatching)
 }
 
-val compileJava by tasks.getting(JavaCompile::class) {
+val compileJava = tasks.getByName<JavaCompile>("compileJava") {
     dependsOn(generateJavaSources)
     source = generateJavaSources.get().source
 
@@ -585,7 +588,7 @@ tasks.build.configure {
 ////////////////////////////////////
 
 
-val downloadRecipeClasspath by tasks.registering(Download::class) {
+val downloadRecipeClasspath = tasks.register<Download>("downloadRecipeClasspath") {
     val targetVersion = "5.6.1"
     src("https://repo.maven.apache.org/maven2/net/dv8tion/JDA/$targetVersion/JDA-$targetVersion.jar")
     dest("src/test/resources/META-INF/rewrite/classpath/JDA-$targetVersion.jar")
@@ -611,7 +614,7 @@ tasks.test {
     useJUnitPlatform()
     failFast = false
 
-    jvmArgs = listOf(
+    jvmArgs(
             "-javaagent:${mockitoAgent.asPath}",
             // https://github.com/raphw/byte-buddy/issues/1803
             "-Dnet.bytebuddy.safe=true"
@@ -626,7 +629,7 @@ tasks.test {
     }
 }
 
-val testJava21Compatibility by tasks.registering(Test::class) {
+val testJava21Compatibility = tasks.register<Test>("testJava21Compatibility") {
     group = "verification"
 
     useJUnitPlatform()
@@ -642,7 +645,7 @@ tasks.named("check").configure {
     dependsOn(testJava21Compatibility)
 }
 
-val verifyBytecodeVersion by tasks.registering(VerifyBytecodeVersion::class) {
+val verifyBytecodeVersion = tasks.register<VerifyBytecodeVersion>("verifyBytecodeVersion") {
     group = "verification"
 
     expectedMajorVersion = 52
@@ -732,9 +735,5 @@ publishing {
 
             pom.populate()
         }
-    }
-
-    repositories.maven {
-        url = stagingDirectory.asFile.toURI()
     }
 }
