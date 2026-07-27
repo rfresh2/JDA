@@ -17,6 +17,7 @@
 package net.dv8tion.jda.api.requests;
 
 import net.dv8tion.jda.api.utils.MiscUtil;
+import net.dv8tion.jda.internal.utils.Checks;
 import net.dv8tion.jda.internal.utils.JDALogger;
 import okhttp3.Headers;
 import okhttp3.Response;
@@ -64,6 +65,7 @@ import javax.annotation.Nonnull;
  */
 public final class SequentialRestRateLimiter implements RestRateLimiter {
     private static final Logger log = JDALogger.getLog(RestRateLimiter.class);
+    private static final int OVERFLOW_TRIM_PERCENT = 10;
     private static final String UNINIT_BUCKET =
             "uninit"; // we generate an uninit bucket for every major parameter configuration
 
@@ -71,6 +73,8 @@ public final class SequentialRestRateLimiter implements RestRateLimiter {
 
     private final Future<?> cleanupWorker;
     private final RateLimitConfig config;
+    private final int maxQueuedRequestsPerBucket;
+    private final int overflowTrimAmount;
 
     private boolean isStopped, isShutdown;
 
@@ -85,7 +89,28 @@ public final class SequentialRestRateLimiter implements RestRateLimiter {
     private final Map<Bucket, Future<?>> rateLimitQueue = new HashMap<>();
 
     public SequentialRestRateLimiter(@Nonnull RateLimitConfig config) {
+        this(config, 0);
+    }
+
+    /**
+     * Creates a new sequential rate-limiter with the provided queue limit.
+     *
+     * @param  config
+     *         The rate-limit configuration
+     * @param  maxQueuedRequestsPerBucket
+     *         The maximum number of queued requests per rate-limit bucket, or 0 to disable
+     *
+     * @throws IllegalArgumentException
+     *         If the provided maximum is negative
+     *
+     * @see    RestConfig#setMaxQueuedRequestsPerBucket(int)
+     */
+    public SequentialRestRateLimiter(@Nonnull RateLimitConfig config, int maxQueuedRequestsPerBucket) {
+        Checks.notNegative(maxQueuedRequestsPerBucket, "Maximum queued requests per bucket");
         this.config = config;
+        this.maxQueuedRequestsPerBucket = maxQueuedRequestsPerBucket;
+        this.overflowTrimAmount =
+                Math.max(1, (int) ((maxQueuedRequestsPerBucket * (long) OVERFLOW_TRIM_PERCENT + 99) / 100));
         this.cleanupWorker = config.getScheduler().scheduleAtFixedRate(this::cleanup, 30, 30, TimeUnit.SECONDS);
     }
 
@@ -379,7 +404,9 @@ public final class SequentialRestRateLimiter implements RestRateLimiter {
 
     private abstract class Bucket implements Runnable {
         protected final String bucketId;
-        protected final Deque<Work> requests = new ConcurrentLinkedDeque<>();
+        protected final Deque<Work> requests =
+                maxQueuedRequestsPerBucket == 0 ? new ConcurrentLinkedDeque<>() : new LinkedBlockingDeque<>();
+        private final Object insertionLock = new Object();
 
         protected long reset = 0;
         protected int remaining = 1;
@@ -393,13 +420,63 @@ public final class SequentialRestRateLimiter implements RestRateLimiter {
         }
 
         public void enqueue(@Nonnull Work request) {
-            requests.addLast(request);
+            add(request, false);
         }
 
         public void retry(@Nonnull Work request) {
             if (!moveRequest(request)) {
-                requests.addFirst(request);
+                add(request, true);
             }
+        }
+
+        private void add(@Nonnull Work request, boolean first) {
+            if (maxQueuedRequestsPerBucket == 0) {
+                if (first) {
+                    requests.addFirst(request);
+                } else {
+                    requests.addLast(request);
+                }
+                return;
+            }
+
+            List<Work> removed;
+            synchronized (insertionLock) {
+                removed = makeRoom();
+                if (first) {
+                    requests.addFirst(request);
+                } else {
+                    requests.addLast(request);
+                }
+            }
+
+            removed.forEach(Work::cancel);
+            if (!removed.isEmpty()) {
+                log.warn(
+                        "Cancelled {} requests from rate-limit bucket {} after reaching the maximum queue size of {}",
+                        removed.size(),
+                        bucketId,
+                        maxQueuedRequestsPerBucket);
+            }
+        }
+
+        @Nonnull
+        private List<Work> makeRoom() {
+            var size = requests.size();
+            if (size < maxQueuedRequestsPerBucket) {
+                return Collections.emptyList();
+            }
+
+            var removeCount = Math.max(overflowTrimAmount, size - maxQueuedRequestsPerBucket + 1);
+            var removed = new ArrayList<Work>(removeCount);
+            for (var request : requests) {
+                if (!request.isPriority() && requests.remove(request)) {
+                    removed.add(request);
+                    if (removed.size() >= removeCount) {
+                        break;
+                    }
+                }
+            }
+            return removed;
         }
 
         public long getReset() {

@@ -47,9 +47,10 @@ public class RestConfig {
     private String userAgent = USER_AGENT;
     private String baseUrl = DEFAULT_BASE_URL;
     private boolean relativeRateLimit = true;
+    private int maxQueuedRequestsPerBucket = 0;
     private Consumer<? super Request.Builder> customBuilder;
     private Function<? super RestRateLimiter.RateLimitConfig, ? extends RestRateLimiter> rateLimiter =
-            SequentialRestRateLimiter::new;
+            config -> new SequentialRestRateLimiter(config, maxQueuedRequestsPerBucket);
 
     /**
      * Whether to use {@code X-RateLimit-Reset-After} to determine the rate-limit backoff.
@@ -63,6 +64,32 @@ public class RestConfig {
     @Nonnull
     public RestConfig setRelativeRateLimit(boolean relativeRateLimit) {
         this.relativeRateLimit = relativeRateLimit;
+        return this;
+    }
+
+    /**
+     * Configure the maximum number of requests that can be queued in each rate-limit bucket.
+     * <br>When the maximum is reached, the default {@link SequentialRestRateLimiter} cancels a batch of the oldest
+     * non-priority requests before accepting a new request.
+     * The batch contains 10 percent of the configured maximum, rounded up.
+     *
+     * <p>This is disabled by default. Setting this to {@code 0} disables the limit.
+     * <br>This setting only applies to the default {@link SequentialRestRateLimiter}. A custom implementation configured
+     * through {@link #setRateLimiterFactory(Function)} is responsible for applying its own queue limits.
+     * <br>Priority requests are never cancelled and can cause a bucket to exceed this maximum.
+     *
+     * @param  maxQueuedRequestsPerBucket
+     *         The maximum number of queued requests per rate-limit bucket, or 0 to disable
+     *
+     * @throws IllegalArgumentException
+     *         If the provided maximum is negative
+     *
+     * @return The current RestConfig for chaining convenience
+     */
+    @Nonnull
+    public RestConfig setMaxQueuedRequestsPerBucket(int maxQueuedRequestsPerBucket) {
+        Checks.notNegative(maxQueuedRequestsPerBucket, "Maximum queued requests per bucket");
+        this.maxQueuedRequestsPerBucket = maxQueuedRequestsPerBucket;
         return this;
     }
 
@@ -207,5 +234,15 @@ public class RestConfig {
      */
     public boolean isRelativeRateLimit() {
         return relativeRateLimit;
+    }
+
+    /**
+     * The maximum number of requests that can be queued in each rate-limit bucket.
+     * <br>This only applies to the default {@link SequentialRestRateLimiter}.
+     *
+     * @return The maximum number of queued requests per rate-limit bucket, or 0 if disabled
+     */
+    public int getMaxQueuedRequestsPerBucket() {
+        return maxQueuedRequestsPerBucket;
     }
 }
