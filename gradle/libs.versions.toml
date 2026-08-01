@@ -1,5 +1,5 @@
 [versions]
-fastutil = "8.5.16"
+fastutil = "8.5.19"
 jackson = "3.1.0"
 
 [libraries]
@@ -8,14 +8,15 @@ assertj = "org.assertj:assertj-core:3.27.7"
 commons-collections = "org.apache.commons:commons-collections4:4.5.0"
 commons-lang3 = "org.apache.commons:commons-lang3:3.20.0"
 eventbus = "com.github.rfresh2:SimpleEventBus:1.6"
-fastutil-int-long-maps = { module = "com.github.rfresh2.fastutil.maps:int-long-maps", version.ref = "fastutil" }
-fastutil-int-object-maps = { module = "com.github.rfresh2.fastutil.maps:int-object-maps", version.ref = "fastutil" }
-fastutil-int-sets = { module = "com.github.rfresh2.fastutil.sets:int-sets", version.ref = "fastutil" }
-fastutil-long-int-maps = { module = "com.github.rfresh2.fastutil.maps:long-int-maps", version.ref = "fastutil" }
-fastutil-long-long-maps = { module = "com.github.rfresh2.fastutil.maps:long-long-maps", version.ref = "fastutil" }
-fastutil-long-object-maps = { module = "com.github.rfresh2.fastutil.maps:long-object-maps", version.ref = "fastutil" }
-fastutil-long-sets = { module = "com.github.rfresh2.fastutil.sets:long-sets", version.ref = "fastutil" }
-fastutil-object-int-maps = { module = "com.github.rfresh2.fastutil.maps:object-int-maps", version.ref = "fastutil" }
+fastutil-bom = { module = "com.github.rfresh2.fastutil:fastutil-bom", version.ref = "fastutil" }
+fastutil-int-long-maps = { module = "com.github.rfresh2.fastutil.maps:int-long-maps"}
+fastutil-int-object-maps = { module = "com.github.rfresh2.fastutil.maps:int-object-maps"}
+fastutil-int-sets = { module = "com.github.rfresh2.fastutil.sets:int-sets"}
+fastutil-long-int-maps = { module = "com.github.rfresh2.fastutil.maps:long-int-maps"}
+fastutil-long-long-maps = { module = "com.github.rfresh2.fastutil.maps:long-long-maps"}
+fastutil-long-object-maps = { module = "com.github.rfresh2.fastutil.maps:long-object-maps"}
+fastutil-long-sets = { module = "com.github.rfresh2.fastutil.sets:long-sets"}
+fastutil-object-int-maps = { module = "com.github.rfresh2.fastutil.maps:object-int-maps"}
 errorprone-core = "com.google.errorprone:error_prone_core:2.50.0"
 findbugs = "com.google.code.findbugs:jsr305:3.0.2"
 jackson-bom = { module = "tools.jackson:jackson-bom", version.ref = "jackson" }

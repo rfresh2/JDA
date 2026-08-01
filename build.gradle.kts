@@ -225,6 +225,7 @@ dependencies {
     implementation(platform(libs.jackson.bom))
     implementation(libs.bundles.jackson)
 
+    implementation(platform(libs.fastutil.bom))
     implementation(libs.bundles.fastutil)
 
     //Audio crypto libraries
