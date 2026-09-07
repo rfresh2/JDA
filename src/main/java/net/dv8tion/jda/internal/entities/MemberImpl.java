@@ -51,6 +51,7 @@ public class MemberImpl implements Member, MemberMixin<MemberImpl> {
     private User user;
     private String nickname;
     private String avatarId;
+    private String bannerId;
     private long joinDate, boostDate, timeOutEnd;
     private boolean pending = false;
     private int flags;
@@ -180,6 +181,11 @@ public class MemberImpl implements Member, MemberMixin<MemberImpl> {
     @Override
     public String getAvatarId() {
         return avatarId;
+    }
+
+    @Override
+    public String getBannerId() {
+        return bannerId;
     }
 
     @Nonnull
@@ -362,6 +368,12 @@ public class MemberImpl implements Member, MemberMixin<MemberImpl> {
     @Override
     public MemberImpl setAvatarId(String avatarId) {
         this.avatarId = avatarId;
+        return this;
+    }
+
+    @Override
+    public MemberImpl setBannerId(String bannerId) {
+        this.bannerId = bannerId;
         return this;
     }
 

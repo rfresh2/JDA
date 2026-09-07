@@ -15,7 +15,6 @@
  */
 
 import com.diffplug.spotless.LineEnding
-import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import de.undercouch.gradle.tasks.download.Download
 import net.dv8tion.jda.gradle.Version
@@ -41,7 +40,6 @@ plugins {
     signing
 
     alias(libs.plugins.shadow)
-    alias(libs.plugins.versions)
     alias(libs.plugins.version.catalog.update)
     alias(libs.plugins.spotless)
     alias(libs.plugins.errorprone)
@@ -62,7 +60,7 @@ val exampleJavaVersion = JavaLanguageVersion.of(25)
 val libraryJavaVersion = JavaLanguageVersion.of(21)
 
 projectEnvironment {
-    version = Version(major = "6", minor = "5", revision = System.getenv("PUBLISH_VERSION") ?: "0", classifier = null)
+    version = Version(major = "6", minor = "6", revision = System.getenv("PUBLISH_VERSION") ?: "0", classifier = null)
 }
 
 artifactFilters {
@@ -282,14 +280,6 @@ fun isNonStable(version: String): Boolean {
     return isStable.not()
 }
 
-tasks.withType<DependencyUpdatesTask> {
-    rejectVersionIf {
-        isNonStable(candidate.version)
-    }
-
-    gradleReleaseChannel = "current"
-}
-
 versionCatalogUpdate {
     versionSelector(VersionSelectors.STABLE)
 }
@@ -415,10 +405,8 @@ val noOpusJar = tasks.register<ShadowJar>("noOpusJar") {
     dependsOn(shadowJar)
     archiveClassifier.set(shadowJar.archiveClassifier.get() + "-no-opus")
 
-    configurations = shadowJar.configurations
     from(sourceSets["main"].output)
     applyOpusExclusions(artifactFilters)
-    manifest.from(jar.manifest)
 }
 
 val minimalJar = tasks.register<ShadowJar>("minimalJar") {
@@ -426,10 +414,23 @@ val minimalJar = tasks.register<ShadowJar>("minimalJar") {
     minimize()
     archiveClassifier.set(shadowJar.archiveClassifier.get() + "-min")
 
-    configurations = shadowJar.configurations
     from(sourceSets["main"].output)
     applyAudioExclusions(artifactFilters)
-    manifest.from(jar.manifest)
+}
+
+tasks.withType<ShadowJar>().configureEach {
+    mergeServiceFiles()
+
+    exclude("**/LICENSE*")
+    exclude("**/LICENCE*")
+    exclude("**/README*")
+    exclude("**/NOTICE*")
+
+    if (this != shadowJar) {
+        manifest.from(shadowJar.manifest)
+        configurations = shadowJar.configurations
+        excludes.addAll(shadowJar.excludes)
+    }
 }
 
 val javadoc = tasks.getByName<Javadoc>("javadoc") {
